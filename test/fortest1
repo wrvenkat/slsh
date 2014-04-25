@@ -1,0 +1,3 @@
+for i in "*.txt" do
+	cat $i | grep velocity > /media/Softwares/$i ;	
+done
