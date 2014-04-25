@@ -9,12 +9,14 @@ CP=/bin/cp
 
 LIBRARIES=  -ll
 
-CFLAGS=-g 
+CFLAGS=-g
 YFLAGS=-d
+STATEREPORT=
+#-v --report=state
 
 PROGRAM=parser
 
-OBJECTS=parser.o lexer.o structure.o print.o util.o plan1.o remotecmd.o globals.o execute.o
+OBJECTS=parser.o lexer.o structure.o print.o util.o plan1.o remotecmd.o globals.o execute.o for_loop.o
 
 SOURCES=lexer.l parser.y
 
@@ -44,6 +46,9 @@ globals.o:  globals.c
 execute.o:  execute.c
 	$(CC) $(CFLAGS) -c execute.c
 
+for_loop.o:  for_loop.c
+	$(CC) $(CFLAGS) -c for_loop.c
+
 #ast.o:  ast.c
 #	$(CC) $(CFLAGS) -c ast.c
 
@@ -54,13 +59,13 @@ parser.o: parser.c
 	$(CC) $(CFLAGS) -c parser.c
 
 parser.c: parser.y
-	$(YACC)  parser.y -o parser.c
+	$(YACC) parser.y -o parser.c
 
 lexer.o: lexer.c parser.tab.h
 	$(CC) $(CFLAGS) -c lexer.c
 
 parser.tab.h: parser.y
-	$(YACC) -d -v --report=state parser.y 
+	$(YACC) -d $(STATEREPORT) parser.y 
 
 lexer.c: lexer.l
 	$(LEX) -olexer.c lexer.l 

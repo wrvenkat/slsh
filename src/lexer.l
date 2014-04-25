@@ -5,6 +5,7 @@
 
 %{
 #include "structure.h"
+#include "for_loop.h"
 #include "parser.tab.h"
 char tokenString[255];
 int printoutScan = 0;
@@ -17,7 +18,10 @@ int lexAlone=0;
 /**********************/
 /* start your regular definitions  here */
 /**********************/
-
+SEMI	";"
+LBRACE	"{"
+RBRACE	"}"
+IN	"in"
 /* this is for arguments that are enclosed between ' and "*/
 /* this is required because white-spaces included between these make sense*/
 QARG		((\'[[:graph:][:blank:]]+\')|(\"[[:graph:][:blank:]]+\"))
@@ -34,12 +38,21 @@ LT 			\<
 PIPE		\|
 WORD		[[:graph:]]+
 WSPACE		([ \r\n\t\v]+)
+NEWLINE		[\r\n]+
 
 /* start your token specifications here */
 /* Token names must come from cmparser.tab.h */
 
 %%
 
+{SEMI}	{ yylval.cVal = strdup(yytext); return TOK_SEMI; }
+"for"	{ yylval.cVal = strdup(yytext); return TOK_FOR; }
+"do"	{ yylval.cVal = strdup(yytext); return TOK_DO; }
+"done" 	{ yylval.cVal = strdup(yytext); return TOK_DONE; }
+"in"	{ yylval.cVal = strdup(yytext); return TOK_IN; }
+{LBRACE}	{ yylval.cVal = strdup(yytext); return TOK_LBRACE; }
+{RBRACE}	{ yylval.cVal = strdup(yytext); return TOK_RBRACE; }
+{NEWLINE}	{ /*yylval.cVal = strdup(yytext); return TOK_NEWLINE;*/ }
 {GT} { return GT; }
 {LT} { return LT; }
 {PIPE} { return PIPE; }
@@ -83,7 +96,31 @@ void printToken(int token, char *str){
 			break;
 		case PIPE:
 			fprintf(yyout,"%d : PIPE : %s\n",yylineno,str);
-			break;		
+			break;
+		case TOK_DO:
+			fprintf(yyout,"%d : TOK_DO : %s\n",yylineno,str);
+			break;
+		case TOK_DONE:
+			fprintf(yyout,"%d : TOK_DONE : %s\n",yylineno,str);
+			break;
+		case TOK_FOR:
+			fprintf(yyout,"%d : TOK_FOR : %s\n",yylineno,str);
+			break;
+		case TOK_SEMI:
+			fprintf(yyout,"%d : TOK_SEMI : %s\n",yylineno,str);
+			break;
+		case TOK_LBRACE:
+			fprintf(yyout,"%d : TOK_LBRACE : %s\n",yylineno,str);
+			break;
+		case TOK_RBRACE:
+			fprintf(yyout,"%d : TOK_RBRACE : %s\n",yylineno,str);
+			break;
+		case TOK_IN:
+			fprintf(yyout,"%d : TOK_IN : %s\n",yylineno,str);
+			break;
+		case TOK_NEWLINE:
+			fprintf(yyout,"%d : TOK_NEWLINE\n",yylineno);
+			break;
 	}
 }
 

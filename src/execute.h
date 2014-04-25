@@ -6,12 +6,18 @@
 
 int gIndex;
 
+typedef struct remotecmd REMOTECMD;
+typedef REMOTECMD* RemoteCmdPtr;
+
 //the bootstrap function that travels the
 //RemoteCmd list and executes each command
-int executePlan();
+int executePlan(RemoteCmdPtr remoteCmdHeadPtr);
 
 //TODO inout and output redirection is pending
 int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost);
+
+//this function executes the output redirection part of the pipeline
+int executeOutputRedirCmd(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost);
 
 //this function transfers the given file to the
 //execHost
@@ -27,5 +33,9 @@ StringPtr prepareCommand(RemoteCmdPtr cmdText, char* tempFile, char* opFile, int
 
 //make temporary directories
 void makeTempDir();
+
+//this function makes the persistent SSH connections and also exits them once
+//all the commands are executed
+int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr);
 
 #endif

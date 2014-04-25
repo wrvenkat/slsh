@@ -1,3 +1,6 @@
+#ifndef UTIL_H
+#define UTIL_H
+
 #include "structure.h"
 #include "globals.h"
 #include <regex.h>
@@ -6,6 +9,9 @@
 
 regex_t fileReg;
 
+typedef struct file FILE_;
+typedef FILE_* FilePtr;
+
 //intialize global variables and flags
 int initGlobals();
 
@@ -13,7 +19,7 @@ int initGlobals();
 FilePtr getFileStruct(char* fileStr);
 
 //returns true if a string is a valid file path or not
-int isFile(char* fakeFile);
+int isFilePath(char* fakeFile);
 
 //compiles the filepath regex
 void compRegex();
@@ -39,3 +45,5 @@ char* getRidOfEscapeChars(char* filePath);
 //this function returns the user@hostname for the ssh
 //conneciton
 StringPtr getSSHString(int host);
+
+#endif

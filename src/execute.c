@@ -6,10 +6,11 @@
 #include "globals.h"
 #include "execute.h"
 #include <unistd.h>
+#include "structure.h"
 
-//thi function makes the persistent SSH connections and also exits them once
+//this function makes the persistent SSH connections and also exits them once
 //all the commands are executed
-int makePersistentSSH(){
+int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
   char** persistPath = 0;
   //allocate size for three char arrays
   persistPath = malloc(sizeof(char*)*(maxHost+1));
@@ -52,12 +53,13 @@ int makePersistentSSH(){
 
 //the bootstrap function that travels the
 //RemoteCmd list and executes each command
-int executePlan(){
+int executePlan(RemoteCmdPtr remoteCmdHeadPtr){
   gIndex=1;
   makeTempDir();
-  return makePersistentSSH();
+  return makePersistentSSH(remoteCmdHeadPtr);
   //return executeCommand(remoteCmdHeadPtr,0,-2);
 }
+
 //TODO inout and output redirection is pending
 int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){  
   if(!remoteCmdPtr)	return 0;
@@ -129,8 +131,9 @@ int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){
   //the most ususal one is the pipe
   else
     val =  executeCommand(nextRemoteCmdPtr,opFile,execHost);
-  free(sshConnString->text);
-  free(sshConnString);
+  //free(sshConnString->text);
+  //free(sshConnString);
+  freeString(sshConnString);
   return val;
 }
 
@@ -158,7 +161,7 @@ int executeOutputRedirCmd(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHo
     StringPtr sshString = getSSHString(remoteCmdPtr->host);
     char* currentHomeDir = getHomeDir(hostMap[remoteCmdPtr->host]->mnt_fsname);
     int length1 = strlen("cat ")+2+strlen(currentHomeDir)+strlen(TEMP_DIR)+strlen(ipFile)
-	      + strlen(" > ")+remoteCmdHeadPtr->cmdText->length;
+	      + strlen(" > ")+remoteCmdPtr->cmdText->length;
     int length2 = strlen("ssh ''")+2+length1+sshString->length;
     command = malloc(sizeof(char)*(length1+length2+1));
     memset(command,0,length1+length2+1);
@@ -242,9 +245,7 @@ int transferInputFile(char* fileName, int prevHost, int currHost){
   pid_t status = system(command);
   int retValue = WEXITSTATUS(status);
   return WEXITSTATUS(retValue);
-  //return 0;
 }
-
 
 //this function transfers the given file to the
 //execHost

@@ -3,6 +3,15 @@
 
 #include "structure.h"
 
+typedef struct file FILE_;
+typedef FILE_* FilePtr;
+
+typedef struct command COMMAND;
+typedef COMMAND* CommandPtr;
+
+typedef struct arg ARG;
+typedef ARG* ArgPtr;
+
 //this function populates the global
 //hostMap array
 void createHostMap();
@@ -25,10 +34,10 @@ FilePtr makeArgPlan1(ArgPtr currArg);
 void makeCmdPlan1(CommandPtr cmd);
 
 //the bootstrap function to make the plan starting with each command
-void makePlan1();
+void makePlan1(CommandPtr cmdHeadPtr);
 
 //this function traverses the pipeline list and fixes any < filename with cat filename
 //for now all we want is the behaviour and not how fast or how slow cat is vs. <
-void fixIPRedir();
+void fixIPRedir(CommandPtr cmdHeadPtr);
 
 #endif

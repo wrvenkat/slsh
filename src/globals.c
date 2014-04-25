@@ -8,16 +8,6 @@ StringPtr createString(){
   return newString;
 }
 
-void freeStringList(StringPtr head){
-  StringPtr tempStrPtr = head;
-  while(tempStrPtr){
-    freeString(tempStrPtr);
-    StringPtr tempTempStrPtr = tempStrPtr->next;
-    free(tempStrPtr);
-    tempStrPtr=tempTempStrPtr;
-  }
-}
-
 void freeString(StringPtr stringPtr){
   free(stringPtr->text);
   free(stringPtr);

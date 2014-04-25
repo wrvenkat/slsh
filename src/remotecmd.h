@@ -4,6 +4,13 @@
 #include "globals.h"
 #include "structure.h"
 #include "util.h"
+#include "enums.h"
+
+typedef struct command COMMAND;
+typedef COMMAND* CommandPtr;
+
+typedef struct arg ARG;
+typedef ARG* ArgPtr;
 
 //specifies a string linked list
 typedef struct remotecmdtext{
@@ -28,26 +35,13 @@ typedef struct remotecmd{
 
 typedef REMOTECMD* RemoteCmdPtr;
 
-//this function frees the RemoteCmdPtr and all of 
+//this function frees the RemoteCmdPtr and all of
 //its fields
 void freeRemoteCmdPtr(RemoteCmdPtr remoteCmdPtr);
 
-//this structure is used in transferring files
-// typedef struct transferfile{
-//   //the one provided on the command line
-//   char* orig;
-//   //the one with the resolved name
-//   char* actual;
-//   int hostd;
-//   int minId;
-//   struct transferfile* next;
-// }TRANSFERFILE;
-// 
-// typedef TRANSFERFILE* TransferFilePtr;
-
 //the head and tail pointers for the RemoteCmd list
-RemoteCmdPtr remoteCmdHeadPtr;
-RemoteCmdPtr remoteCmdTailPtr;
+//RemoteCmdPtr remoteCmdHeadPtr;
+//RemoteCmdPtr remoteCmdTailPtr;
 
 //this function returns an initalised REMOTECMD struct pointer
 RemoteCmdPtr createRemoteCmd();
@@ -76,11 +70,12 @@ RemoteCmdTextPtr getRemoteCmdTextFromCmd(CommandPtr cmd);
 RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr, int recursive);
 
 //the bootstrap function that calls _makeRemoteCmd
-void makeRemoteCmd();
+RemoteCmdPtr makeRemoteCmd(CommandPtr cmdHeadPtr);
 
 //print the command tree
-void printRemoteCmdTree();
+void printRemoteCmdTree(RemoteCmdPtr remoteCmdHeadPtr);
 
+//print the transferFilelist
 void printTransferList(FilePtr head);
 
 #endif

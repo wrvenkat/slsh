@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "globals.h"
+#include "enums.h"
 
 //intialize global variables and flags
 int initGlobals(){
@@ -74,16 +75,18 @@ char* getRidOfEscapeChars(char* filePath){
 
 //this function returns a FILE_ structure for a given valid fileStr
 FilePtr getFileStruct(char* fileStr){
-  printf("FileName in getFileStruct is %s\n",fileStr);
+  //printf("FileStr in getFileStruct is %s\n",fileStr);
   struct stat* newStat = malloc(sizeof(struct stat));
   char* actualPath = getRidOfEscapeChars(fileStr);
-  //printf("After processing fileName is %s\n",actualPath);
+  //printf("After getRidOfEscapeChars is %s\n",actualPath);
   if(!stat(actualPath, newStat)){
     FilePtr newFile = malloc(sizeof(FILE_));
     dev_t m1=newStat->st_dev;
     int minId=minor(m1);
     int majId=major(m1);
-    printf("Major Id is %d\n",majId);
+    //printf("Major Id is %d\n",majId);
+    //TODO there is a problem with getting the major and
+    //minor device no of /dev/null
     newFile->minId=minId;
     int host = -1;
     //if major ID !=0 meands it is a
@@ -159,7 +162,7 @@ void createHostMap(){
 }
 
 //returns true if a string is a valid file path or not
-int isFile(char* fakeFile){
+int isFilePath(char* fakeFile){
   regmatch_t matchedArray[6];
   if(regexec(&fileReg,fakeFile,(size_t)0,matchedArray,0)==REG_NOMATCH){
     if(DEBUG1)
@@ -198,7 +201,7 @@ char* getHomeDir(char* fsName){
 //returns the filename given the filePath
 char* getFileName(char* filePath){
   //printf("Given path is %s\n",filePath);
-  if(strrchr(filePath, '/'))
+  if(strrchr(filePath, '/'))    
     return (strrchr(filePath, '/')+1);
   else
     return filePath;

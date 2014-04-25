@@ -6,6 +6,7 @@
 #include <regex.h>
 #include "util.h"
 #include "plan1.h"
+#include "enums.h"
 
 //this function basically calls the processWord1
 //function because the '\ ' sequence is recognised
@@ -16,12 +17,13 @@ FilePtr processPath1(ArgPtr pathArg){
 
 //processes the Word argument and returns a FILE_ struct if true
 FilePtr processWord1(ArgPtr wordArg){
+  FilePtr tempFilePtr =0;
   //check if the word is a path or a local file
-  if(isFile(wordArg->text)){
-    FilePtr tempFilePtr = getFileStruct(wordArg->text);    
+  if(isFilePath(wordArg->text)){
+    tempFilePtr = getFileStruct(wordArg->text);    
     if(tempFilePtr){
-//       if(DEBUG1)
-// 	printf("Host:%d ActualPath:%s Size:%d\n",tempFilePtr->host,tempFilePtr->actualPath,tempFilePtr->size);
+      //if(DEBUG1)
+      //printf("In processWord1 Host:%d ActualPath:%s Size:%d\n",tempFilePtr->host,tempFilePtr->actualPath,tempFilePtr->size);
       return tempFilePtr;
     }
   }
@@ -39,9 +41,10 @@ FilePtr processWord1(ArgPtr wordArg){
   char* newFilePath = (char*)malloc(sizeof(char)*(strlen(currWD)+strlen(wordArg->text)+1));
   memset(newFilePath,0,strlen(currWD)+strlen(wordArg->text)+1);
   sprintf(newFilePath,"%s/%s",currWD,wordArg->text);
-//   if(DEBUG1)	printf("The newFilePath is %s\n",newFilePath);
-  fflush(stdout);
-  return getFileStruct(newFilePath);
+  // if(DEBUG1)	printf("The newFilePath is %s\n",newFilePath);  
+  tempFilePtr = getFileStruct(newFilePath);
+  free(newFilePath);
+  return tempFilePtr;
 }
 
 //this function processes an argument and returns a 
@@ -49,8 +52,7 @@ FilePtr processWord1(ArgPtr wordArg){
 FilePtr makeArgPlan1(ArgPtr currArg){
   ArgPtr tempArgPtr = currArg;
   if(!tempArgPtr)
-    return 0;
-  //go through the arg list and get a list of files that need to be considered
+    return 0;  
   FilePtr fileList = 0;
   int fileListSize=0;
   ArgType argType = tempArgPtr->type;    
@@ -84,55 +86,44 @@ FilePtr makeArgPlan1(ArgPtr currArg){
 //is to be executed based on the largest file size
 //present in its arg list
 void makeCmdPlan1(CommandPtr cmd){
-  
-  //printf("For the command %s\n",cmd->name);
+  printf("makeCmdPlan1 for the command %s\n",cmd->name);
   ArgPtr tempArgPtr = cmd->headArgs;
-  if(!tempArgPtr)
+  if(!tempArgPtr && cmd->currOutputRedir)
+    tempArgPtr = createArg(strdup(cmd->name),WORDT);
+  else if(!tempArgPtr)
     return;
+  
   FilePtr largestFile=0;
-  //this array hold the total file sizes for this particular
-  //host
-  unsigned int hostMapSize[maxHost];
+  //this array holds the total file sizes
+  //for hosts corresponding to the files
+  //present in this command
+  unsigned int hostFileSize[maxHost];
+  int i=0;
+  while(i<maxHost)
+    hostFileSize[i++]=0;
   int targetHost=0;
   //find the file with the largest file size
-  while(tempArgPtr){
-    if(tempArgPtr->type==PATHT || tempArgPtr->type==WORDT){
-      FilePtr tempLargestFile = makeArgPlan1(tempArgPtr);      
-      if(tempLargestFile){
-	hostMapSize[tempLargestFile->host]+=tempLargestFile->size;
-	//printf("FileName is %s\n",tempLargestFile->origPath);
-	/*if(!largestFile){
-	  largestFile=tempLargestFile;
-	  tempArgPtr->filePtr=largestFile;
-	}
-	else{*/
-	  tempArgPtr->filePtr=tempLargestFile;
-	  //if the tempLargestFile is not null
-	  /*if(tempLargestFile){
-	    if(largestFile->size < tempLargestFile->size){
-	      FilePtr tempFilePtr1=largestFile;
-	      largestFile=tempLargestFile;
-	    }
-	  }
-	}*/
-      }
-      else 	tempArgPtr->filePtr=0;
+  while(tempArgPtr){    
+    FilePtr currFile = makeArgPlan1(tempArgPtr);      
+    if(currFile){
+      hostFileSize[currFile->host]+=currFile->size;
+      tempArgPtr->filePtr=currFile;
+      //freeFilePtr(currFile);
     }
-    tempArgPtr=tempArgPtr->next;
-    //now find the target host
-    int i=1;    
-    while(i<maxHost){
-      if(hostMapSize[targetHost]<hostMapSize[i])
-	targetHost=i;
-      i++;
-    }
+    else
+      tempArgPtr->filePtr=0;
+    tempArgPtr=tempArgPtr->next;    
   }
-//   if(largestFile){
-//     //set the host where this command needs to be executed
-//     cmd->execHost=largestFile->host;
-//     if(DEBUG2)
-//       printf("The target execution host for this command is %d\n",cmd->execHost);
-//   }
+  //now find the target host
+  i=1;
+  targetHost=0;
+  
+  while(i<maxHost){
+    if(hostFileSize[targetHost]<hostFileSize[i])
+      targetHost=i;
+    i++;
+  }
+  
   if(targetHost!=-1){
     //set the host where this command needs to be executed
     cmd->execHost=targetHost;
@@ -145,7 +136,7 @@ void makeCmdPlan1(CommandPtr cmd){
 }
 
 //the bootstrap function to make the plan starting with each command
-void makePlan1(){
+void makePlan1(CommandPtr cmdHeadPtr){
   //printf("Inside planning\n");
   if(!cmdHeadPtr)
     return;  
@@ -158,7 +149,7 @@ void makePlan1(){
 
 //this function traverses the pipeline list and fixes any < filename with cat filename
 //for now all we want is the behaviour and not how fast or how slow cat is vs. <
-void fixIPRedir(){
+void fixIPRedir(CommandPtr cmdHeadPtr){
   if(!cmdHeadPtr)	return;  
   CommandPtr tempCmdPtr = cmdHeadPtr;
   CommandPtr prevCmdPtr = tempCmdPtr;

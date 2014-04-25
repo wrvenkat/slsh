@@ -40,10 +40,10 @@ typedef struct stringstruct{
 
 typedef STRING* StringPtr;
 
+//creates a string
 StringPtr createString();
 
+//frees a string
 void freeString(StringPtr stringPtr);
-
-void freeStringList(StringPtr head);
 
 #endif
