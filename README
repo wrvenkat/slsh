@@ -1,1 +1,11 @@
-Seamless Shell
+Seamless Shell - SLSH - /SLUSH/
+--------------
+
+1. COMPILE
+----------
+
+a. Dependencies
+	-	Need Flex and Bison installed
+
+b. Compilation
+	-	running make should get you the executeable for slsh
