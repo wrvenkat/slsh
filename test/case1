@@ -1,0 +1,1 @@
+sh stats.sh 'songlist 1' 'songlist 2' 'songlist 3'

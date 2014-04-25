@@ -1,0 +1,311 @@
+Terminals unused in grammar
+
+   WS
+
+
+State 23 conflicts: 2 shift/reduce
+
+
+Grammar
+
+    0 $accept: InputUnit $end
+
+    1 InputUnit: Pipeline
+
+    2 Pipeline: Pipeline InputRedir
+    3         | Pipeline OutputRedir
+    4         | OptionList PIPE Pipeline
+    5         | OptionList
+
+    6 OptionList: SOPT OptionList
+    7           | LOPT OptionList
+    8           | QARG OptionList
+    9           | WORD OptionList
+   10           | PATH OptionList
+   11           | /* empty */
+
+   12 InputRedir: LT WORD
+
+   13 OutputRedir: GT WORD
+   14            | GT PATH
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+WS (258)
+GT (259) 13 14
+LT (260) 12
+LOPT (261) 7
+SOPT (262) 6
+PATH (263) 10 14
+WORD (264) 9 12 13
+PIPE (265) 4
+QARG (266) 8
+
+
+Nonterminals, with rules where they appear
+
+$accept (12)
+    on left: 0
+InputUnit (13)
+    on left: 1, on right: 0
+Pipeline (14)
+    on left: 2 3 4 5, on right: 1 2 3 4
+OptionList (15)
+    on left: 6 7 8 9 10 11, on right: 4 5 6 7 8 9 10
+InputRedir (16)
+    on left: 12, on right: 2
+OutputRedir (17)
+    on left: 13 14, on right: 3
+
+
+state 0
+
+    0 $accept: . InputUnit $end
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    InputUnit   go to state 6
+    Pipeline    go to state 7
+    OptionList  go to state 8
+
+
+state 1
+
+    7 OptionList: LOPT . OptionList
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    OptionList  go to state 9
+
+
+state 2
+
+    6 OptionList: SOPT . OptionList
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    OptionList  go to state 10
+
+
+state 3
+
+   10 OptionList: PATH . OptionList
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    OptionList  go to state 11
+
+
+state 4
+
+    9 OptionList: WORD . OptionList
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    OptionList  go to state 12
+
+
+state 5
+
+    8 OptionList: QARG . OptionList
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    OptionList  go to state 13
+
+
+state 6
+
+    0 $accept: InputUnit . $end
+
+    $end  shift, and go to state 14
+
+
+state 7
+
+    1 InputUnit: Pipeline .
+    2 Pipeline: Pipeline . InputRedir
+    3         | Pipeline . OutputRedir
+
+    GT  shift, and go to state 15
+    LT  shift, and go to state 16
+
+    $default  reduce using rule 1 (InputUnit)
+
+    InputRedir   go to state 17
+    OutputRedir  go to state 18
+
+
+state 8
+
+    4 Pipeline: OptionList . PIPE Pipeline
+    5         | OptionList .
+
+    PIPE  shift, and go to state 19
+
+    $default  reduce using rule 5 (Pipeline)
+
+
+state 9
+
+    7 OptionList: LOPT OptionList .
+
+    $default  reduce using rule 7 (OptionList)
+
+
+state 10
+
+    6 OptionList: SOPT OptionList .
+
+    $default  reduce using rule 6 (OptionList)
+
+
+state 11
+
+   10 OptionList: PATH OptionList .
+
+    $default  reduce using rule 10 (OptionList)
+
+
+state 12
+
+    9 OptionList: WORD OptionList .
+
+    $default  reduce using rule 9 (OptionList)
+
+
+state 13
+
+    8 OptionList: QARG OptionList .
+
+    $default  reduce using rule 8 (OptionList)
+
+
+state 14
+
+    0 $accept: InputUnit $end .
+
+    $default  accept
+
+
+state 15
+
+   13 OutputRedir: GT . WORD
+   14            | GT . PATH
+
+    PATH  shift, and go to state 20
+    WORD  shift, and go to state 21
+
+
+state 16
+
+   12 InputRedir: LT . WORD
+
+    WORD  shift, and go to state 22
+
+
+state 17
+
+    2 Pipeline: Pipeline InputRedir .
+
+    $default  reduce using rule 2 (Pipeline)
+
+
+state 18
+
+    3 Pipeline: Pipeline OutputRedir .
+
+    $default  reduce using rule 3 (Pipeline)
+
+
+state 19
+
+    4 Pipeline: OptionList PIPE . Pipeline
+
+    LOPT  shift, and go to state 1
+    SOPT  shift, and go to state 2
+    PATH  shift, and go to state 3
+    WORD  shift, and go to state 4
+    QARG  shift, and go to state 5
+
+    $default  reduce using rule 11 (OptionList)
+
+    Pipeline    go to state 23
+    OptionList  go to state 8
+
+
+state 20
+
+   14 OutputRedir: GT PATH .
+
+    $default  reduce using rule 14 (OutputRedir)
+
+
+state 21
+
+   13 OutputRedir: GT WORD .
+
+    $default  reduce using rule 13 (OutputRedir)
+
+
+state 22
+
+   12 InputRedir: LT WORD .
+
+    $default  reduce using rule 12 (InputRedir)
+
+
+state 23
+
+    2 Pipeline: Pipeline . InputRedir
+    3         | Pipeline . OutputRedir
+    4         | OptionList PIPE Pipeline .
+
+    GT  shift, and go to state 15
+    LT  shift, and go to state 16
+
+    GT        [reduce using rule 4 (Pipeline)]
+    LT        [reduce using rule 4 (Pipeline)]
+    $default  reduce using rule 4 (Pipeline)
+
+    InputRedir   go to state 17
+    OutputRedir  go to state 18

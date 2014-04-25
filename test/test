@@ -1,0 +1,1 @@
+find . -name "*.bak" -type f -print | xargs /media/UbuntuEC2A/TestA/op.txt \123131231\/\ /bin/rm/asdsad\\ asdsadsad/asdsa -f | sed 's|/usr/local/bin|/common/bin|' > asdasdasd

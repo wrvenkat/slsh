@@ -1,0 +1,3 @@
+find . -name "*.bak,asdasdasdas,sadasdsadsa,dasdas/asdsad/asdasdsad/sadasd" -type f -print
+
+xargs /bin/rm -f

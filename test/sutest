@@ -1,0 +1,1 @@
+find . -name "*.bak" -type f -print | xargs /media/UbuntuEC2A/TestA/op.txt /media/UbuntuEC2D/TestD/velocity.log /media/UbuntuEC2V/TestV/file\ create.sh -f | sed 's|/usr/local/bin|/common/bin|' | asdasdasd

@@ -1,0 +1,1 @@
+egrep --color=/var/log/messages
