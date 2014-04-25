@@ -1,0 +1,1 @@
+cat /media/Softwares/op.txt | grep -f /media/UbuntuEC2A/TestA/velocitygrep1 | awk '{print $1}' > /media/Softwares/result.txt ;
