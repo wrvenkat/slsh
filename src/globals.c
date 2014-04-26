@@ -9,6 +9,7 @@ StringPtr createString(){
 }
 
 void freeString(StringPtr stringPtr){
+  if(!stringPtr)	return;
   free(stringPtr->text);
   free(stringPtr);
 }

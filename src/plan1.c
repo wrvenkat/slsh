@@ -50,6 +50,7 @@ FilePtr processWord1(ArgPtr wordArg){
 //this function processes an argument and returns a 
 //filestructure pointer if the argument word is a valid file
 FilePtr makeArgPlan1(ArgPtr currArg){
+  if(!currArg)	return 0;
   ArgPtr tempArgPtr = currArg;
   if(!tempArgPtr)
     return 0;  
@@ -86,6 +87,7 @@ FilePtr makeArgPlan1(ArgPtr currArg){
 //is to be executed based on the largest file size
 //present in its arg list
 void makeCmdPlan1(CommandPtr cmd){
+  if(!cmd)	return;
   printf("makeCmdPlan1 for the command %s\n",cmd->name);
   ArgPtr tempArgPtr = cmd->headArgs;
   if(!tempArgPtr && cmd->currOutputRedir)

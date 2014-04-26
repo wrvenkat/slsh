@@ -54,6 +54,8 @@ int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
 //the bootstrap function that travels the
 //RemoteCmd list and executes each command
 int executePlan(RemoteCmdPtr remoteCmdHeadPtr){
+  if(!remoteCmdHeadPtr)	return 1;
+  printf("Inside executePlan\n");
   gIndex=1;
   makeTempDir();
   return makePersistentSSH(remoteCmdHeadPtr);
@@ -411,11 +413,12 @@ void makeTempDir(){
       mkDirCmd = malloc(sizeof(char)*(length+1));
       sprintf(mkDirCmd,"ssh %s 'mkdir \"%s%s\" %s'",sshString->text,homeDir,TEMP_DIR, REDIR_NULL);
     } 
-    //if(DEBUG2)	printf("The mkDirCmd is %s\n",mkDirCmd);
+    //if(DEBUG2)
+    printf("The mkDirCmd is %s\n",mkDirCmd);
     pid_t status = system(mkDirCmd);
     free(homeDir);
-    free(mkDirCmd);
-    free(sshString);
+    //free(mkDirCmd);
+    freeString(sshString);
   }
   //if(DEBUG2)	printf("--------------------------------------------------------------------\n");
 }
