@@ -6,9 +6,32 @@
 #define MAX_DIR_LENGTH 255
 #define TEMP_FILE_LENGTH 30
 
-#define DEBUG1 1
-#define DEBUG2 1
-#define DEBUG3 1
+//debug flags to enable/disable debug messages of various stages
+//and various functions
+//general debug messages
+#define DBG_GEN 0
+//debug messages at the entry of functions
+#define DBG_FUNC_ENTRY 0
+//turns on or off all of the debug messages in makePlan1()
+//NOTE if turning on DBG_PLAN do turn on DBG_FILE
+//so the you see what is the details of each file is
+#define DBG_PLAN 0
+//enable debug messages for getFileStruct function
+#define DBG_FILE 0
+//turns on or off all of the debug messages in printCmdTree()
+#define DBG_CMD_TREE_PRINT 1
+//turns on or off all of the debug messages in makeRemoteCmd()
+#define DBG_MAKE_RMTE_CMD 0
+//turns on or off all of the debug messages in printRemoteCmdTree()
+#define DBG_RMTE_CMD_TREE_PRINT 1
+//turns on or off all of the debug messages in free*() functions
+#define DBG_FREE 0
+//turns on or off all of the debug messages in lexer
+#define DBG_LEX 0
+//turns on or off all of the debug messages in parser
+#define DBG_PARSE 0
+//toggle on or off to print hostMap
+#define DBG_HOSTMAP_PRINT 0
 
 #define TEMP_DIR ".slsh/"
 #define P_PATH_STR "~/.ssh/%r@%h:%p"
@@ -19,6 +42,7 @@
 #define ESCAPE_SEQ1 "\ "
 #define ESCAPE_SEQ2 "\\t"
 
+//TODO For future use, does nothing as of now
 //flag to decide if we have to aggressively
 //look for args inside QARGS as well
 int aggFlag;

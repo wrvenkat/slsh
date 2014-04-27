@@ -7,6 +7,8 @@
 #include "structure.h"
 #include "for_loop.h"
 #include "parser.tab.h"
+#include "globals.h"
+
 char tokenString[255];
 int printoutScan = 0;
 int lexAlone=0;
@@ -33,8 +35,8 @@ LONGOPT		(--[[:alnum:]]+(=[[:graph:]]+){0,1})
 /*its ugly but hey its working*/
 /*besides this is inevitably badass \m/*/
 PATH		((((\/{0,1})(((\\[\r\t ]+)|(\\))+[^\\ \n\t\v\/]*(\\+[\t\v ]+)*)*)+[^\/\\ \t\v\n]*)+)
-GT 			\>
-LT 			\<
+GT 		\>
+LT 		\<
 PIPE		\|
 WORD		[[:graph:]]+
 WSPACE		([ \r\n\t\v]+)
@@ -68,72 +70,72 @@ NEWLINE		[\r\n]+
 /* C support functions */
 /**********************/
 
-void printToken(int token, char *str){			
-	switch(token){		
+void printToken(int token, char *str){
+	switch(token){
 		case WS:
-			fprintf(yyout,"%d : WS : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : WS : %s\n",yylineno,str);
+		  break;
 		case QARG:
-			fprintf(yyout,"%d : QARG : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : QARG : %s\n",yylineno,str);
+		  break;
 		case SOPT:
-			fprintf(yyout,"%d : SMALLOPT : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : SMALLOPT : %s\n",yylineno,str);
+		  break;
 		case LOPT:
-			fprintf(yyout,"%d : LONGOPT : %s\n",yylineno,str);
-			break;			
+		  fprintf(yyout,"%d : LONGOPT : %s\n",yylineno,str);
+		  break;			
 		case WORD:
-			fprintf(yyout,"%d : WORD : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : WORD : %s\n",yylineno,str);
+		  break;
 		case PATH:
-			fprintf(yyout,"%d : PATH : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : PATH : %s\n",yylineno,str);
+		  break;
 		case GT:
-			fprintf(yyout,"%d : GT : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : GT : %s\n",yylineno,str);
+		  break;
 		case LT:
-			fprintf(yyout,"%d : LT : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : LT : %s\n",yylineno,str);
+		  break;
 		case PIPE:
-			fprintf(yyout,"%d : PIPE : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : PIPE : %s\n",yylineno,str);
+		  break;
 		case TOK_DO:
-			fprintf(yyout,"%d : TOK_DO : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_DO : %s\n",yylineno,str);
+		  break;
 		case TOK_DONE:
-			fprintf(yyout,"%d : TOK_DONE : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_DONE : %s\n",yylineno,str);
+		  break;
 		case TOK_FOR:
-			fprintf(yyout,"%d : TOK_FOR : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_FOR : %s\n",yylineno,str);
+		  break;
 		case TOK_SEMI:
-			fprintf(yyout,"%d : TOK_SEMI : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_SEMI : %s\n",yylineno,str);
+		  break;
 		case TOK_LBRACE:
-			fprintf(yyout,"%d : TOK_LBRACE : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_LBRACE : %s\n",yylineno,str);
+		  break;
 		case TOK_RBRACE:
-			fprintf(yyout,"%d : TOK_RBRACE : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_RBRACE : %s\n",yylineno,str);
+		  break;
 		case TOK_IN:
-			fprintf(yyout,"%d : TOK_IN : %s\n",yylineno,str);
-			break;
+		  fprintf(yyout,"%d : TOK_IN : %s\n",yylineno,str);
+		  break;
 		case TOK_NEWLINE:
-			fprintf(yyout,"%d : TOK_NEWLINE\n",yylineno);
-			break;
+		  fprintf(yyout,"%d : TOK_NEWLINE\n",yylineno);
+		  break;
 	}
 }
 
 int gettok(void){
-    int currentToken;
-    
+    int currentToken;    
     currentToken=yylex();    
     if (currentToken == 0) { // means EOF}
             return 0;
     }
      if (printoutScan || lexAlone) {
-    	strncpy(tokenString, yytext, 255);   
-        printToken(currentToken,tokenString);
+    	strncpy(tokenString, yytext, 255);
+    	if(DBG_LEX)
+	  printToken(currentToken,tokenString);
     }
     return currentToken;
 }
@@ -145,7 +147,7 @@ void initLex(int argc, char **argv){
     yyin = stdin;
 
    if(lexAlone){
-	while (gettok() !=0) ; //gettok returns 0 on EOF
-		return;
+    while (gettok() !=0) ; //gettok returns 0 on EOF
+      return;
    }
 }

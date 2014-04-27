@@ -4,7 +4,6 @@
 
 //print the entire prse tree
 void printTree(){
-  //InputUnitPtr inputUnit = headPtr;
   printf("-----------Begin printTree----------------------------------\n");
   if(headPtr->type==FORLOOPT)
     printForLoop((ForLoopPtr)(headPtr->inputUnit));
@@ -30,14 +29,12 @@ void printForLoop(ForLoopPtr currForLoop){
 }
 
 //print the pipeline
-void printPipeline(PipelineListPtr pipeline){
-  printf("--------begin printPipeline-----------------\n");
+void printPipeline(PipelineListPtr pipeline){  
   CommandPtr cmdPtr = pipeline->headCommand;  
   while(cmdPtr){
     printCommand(cmdPtr);
     cmdPtr=cmdPtr->next;
-  }
-  printf("\n--------end printPipeline-----------------\n");
+  }  
 }
 
 //print the command

@@ -11,7 +11,8 @@
 //this function makes the persistent SSH connections and also exits them once
 //all the commands are executed
 int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
-  printf("Inside makePersistentSSH\n");
+  if(DBG_FUNC_ENTRY)
+    printf("Inside makePersistentSSH\n");
   char** persistPath = 0;
   //allocate size for three char arrays
   persistPath = malloc(sizeof(char*)*(maxHost+1));
@@ -31,8 +32,8 @@ int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
     sprintf(persistPath[i],"%s%f",P_PATH_STR,f);
     char cmd[length1+1+strlen("'exit'")];
     sprintf(cmd,"ssh %s %s %s%f 'exit'",sshString->text,PERSIST_SSH,P_PATH_STR,f);
-    //if(DEBUG2)	
-    printf("The ssh persist string is %s\n",cmd);
+    if(DBG_GEN)	
+      printf("The ssh persist string is %s\n",cmd);
     //pid_t status = system(cmd);
     //retValue = WEXITSTATUS(status);
   }
@@ -45,7 +46,8 @@ int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
     char cmd[length1+1];
     memset(cmd,0,length1+1);
     sprintf(cmd,"%s %s %s %s",PERSIST_EXIT,persistPath[i],sshString->text,REDIR_NULL);
-    //if(DEBUG2)	printf("SSH exit string is %s\n",cmd);
+    if(DBG_GEN)
+      printf("SSH exit string is %s\n",cmd);
     //pid_t status = system(cmd);
     //retValue = WEXITSTATUS(status);
     free(persistPath[i]);
@@ -58,7 +60,8 @@ int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
 //RemoteCmd list and executes each command
 int executePlan(RemoteCmdPtr remoteCmdHeadPtr){
   if(!remoteCmdHeadPtr)	return 1;
-  printf("Inside executePlan\n");
+  if(DBG_FUNC_ENTRY)
+    printf("Inside executePlan\n");
   gIndex=1;
   makeTempDir();
   return makePersistentSSH(remoteCmdHeadPtr);
@@ -67,13 +70,13 @@ int executePlan(RemoteCmdPtr remoteCmdHeadPtr){
 //TODO inout and output redirection is pending
 int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){  
   if(!remoteCmdPtr)	return 0;
-  //printf("Execution at host:%d\n",remoteCmdPtr->host);
-  //printf("For command %s\n",remoteCmdPtr->cmdText->text);  
+  if(DBG_FUNC_ENTRY)
+    printf("Execution at host:%d for command %s\n",remoteCmdPtr->host,remoteCmdPtr->cmdText->text);  
   //if the prevExecHost is not -2 and if ipFileis not empty, then we need
   //to transfer the ipFile from prevExecHost to current host
   if(prevExecHost!=-2 && ipFile){
     if(transferInputFile(ipFile,prevExecHost,remoteCmdPtr->host)<0){
-      printf("Error transferring temporary file from host: %d to host: %d\n",prevExecHost,remoteCmdPtr->host);
+      fprintf(stderr,"Error transferring temporary file from host: %d to host: %d\n",prevExecHost,remoteCmdPtr->host);
       return -1;
     }
   }  
@@ -110,7 +113,8 @@ int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){
   //once all the files have been transferred
   //we execute the command
   StringPtr sshConnString = prepareCommand(remoteCmdPtr,ipFile,opFile,execHost);
-  if(DEBUG2)	printf("Execution Command: %s\n",sshConnString->text);
+  if(DBG_GEN)
+    printf("executeCommand: Execution Command: %s\n",sshConnString->text);
   int retValue = 0;
   if(sshConnString){
     //pid_t status = system(sshConnString->text);
@@ -120,7 +124,8 @@ int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){
     fprintf(stderr,"Command %s terminated with return value %d\n",remoteCmdPtr->cmdText->text,retValue);   
     return retValue;
   }
-  if(DEBUG2)	printf("--------------------------------------------------------------------\n");
+  if(DBG_GEN)
+    printf("--------------------------------------------------------------------\n");
     
   RemoteCmdPtr nextRemoteCmdPtr = remoteCmdPtr->next;
   
@@ -141,12 +146,13 @@ int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){
 int executeOutputRedirCmd(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){
   //TODO implement the logic for file transfer absed on the file present and the execution host
   if(!remoteCmdPtr)	return 0;
-  printf("Execution at host:%d\n",remoteCmdPtr->host);
+  if(DBG_FUNC_ENTRY)
+    printf("Outputredir execution at host:%d\n",remoteCmdPtr->host);
   //if the prevExecHost is not -2 and if ipFileis not empty, then we need
   //to transfer the ipFile from prevExecHost to current host
   if(prevExecHost!=-2 && ipFile){
     if(transferInputFile(ipFile,prevExecHost,remoteCmdPtr->host)<0){
-      printf("ERROR:File required to transfer input from\n");
+      fprintf(stderr,"ERROR:File required to transfer input from\n");
       return -1;
     }
   }
@@ -177,7 +183,7 @@ int executeOutputRedirCmd(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHo
     memset(command,0,length+1);
     sprintf(command,"cat \"%s%s%s\" > \"%s\"",currentHomeDir,TEMP_DIR,ipFile,remoteCmdPtr->cmdText->text);    
   }  
-  //if(DEBUG2)	
+  if(DBG_GEN)
     printf("The OutputRedir command is %s\n",command);
   //pid_t status = system(command);
   //retValue = WEXITSTATUS(status);
@@ -199,8 +205,8 @@ int transferInputFile(char* fileName, int prevHost, int currHost){
   int length3 = strlen(TEMP_DIR)+strlen(fileName);  
   StringPtr prevSSHString = 0;
   StringPtr currSSHString = 0;
-  //if(DEBUG2)
-    printf("At transferInputFile with prevHost: %d and currHost: %d and fileName:%s\n",prevHost,currHost,fileName);
+  if(DBG_GEN)
+    printf("TransferInputFile from prevHost: %d to currHost: %d and fileName:%s\n",prevHost,currHost,fileName);
   if(prevHost!=0){
     prevSSHString =getSSHString(prevHost);
     length1 = prevSSHString->length+1+strlen(prevHomeDir)+length3+4;
@@ -238,8 +244,8 @@ int transferInputFile(char* fileName, int prevHost, int currHost){
     sprintf(cmdPtr," \"%s%s%s\"",currHomeDir,TEMP_DIR,fileName);
     cmdPtr+=strlen(" ")+length2;
   }
-  //if(DEBUG2)
-    printf("Input Transfer Command: %s\n",command);
+  if(DBG_GEN)
+    printf("transferInputFile: Input Transfer Command: %s\n",command);
   //pid_t status = system(command);
   //int retValue = WEXITSTATUS(status);
   return WEXITSTATUS(retValue);
@@ -248,7 +254,8 @@ int transferInputFile(char* fileName, int prevHost, int currHost){
 //this function transfers the given file to the
 //execHost
 int transferFile(FilePtr currFile, int execHost){
-  //printf("Inside transferFile with actual path %s\n",currFile->actualPath);
+  if(DBG_FUNC_ENTRY)
+    printf("Inside transferFile with actual path %s\n",currFile->actualPath);
   if(!currFile || execHost==-1) return -1;  
   char* toHomeDir = 0;
   char* fromHomeDir = 0;
@@ -275,7 +282,7 @@ int transferFile(FilePtr currFile, int execHost){
     toSSHString = getSSHString(execHost);
     toHomeDir = getHomeDir(hostMap[execHost]->mnt_fsname);
   }
-  //if(DEBUG2)	printf("HomeDir is %s\n",toHomeDir);
+  
   length1 = fromSSHString->length+strlen(fromHomeDir)+strlen(fromHomeRelPath)+1+4;
   length2 = toSSHString->length+strlen(toHomeDir)+strlen(TEMP_DIR)+strlen(fileName)+1+4;
   char fromRemoteFileString[length1+1];  
@@ -296,8 +303,8 @@ int transferFile(FilePtr currFile, int execHost){
   char* command = malloc(sizeof(char)*(length+1));
   memset(command,0,length+1);
   sprintf(command,"scp %s %s",fromRemoteFileString,toRemoteFileString);
-  //if(DEBUG2)
-  printf("File Transfer Command: %s\n",command);
+  if(DBG_GEN)
+    printf("File Transfer Command: %s\n",command);
   int retValue =0;
   //int status = system(command);
   //retValue = WEXITSTATUS(status);
@@ -309,7 +316,8 @@ int transferFile(FilePtr currFile, int execHost){
 //based on the target machine
 StringPtr prepareCommand(RemoteCmdPtr cmd, char* ipFile, char* opFile, int execHost){  
   if(!cmd) return 0;
-  //printf("Inside prepareCommand with execHost %d\n",execHost);
+  if(DBG_FUNC_ENTRY)
+    printf("Inside prepareCommand with execHost %d\n",execHost);
   StringPtr cmdText = cmd->cmdText;
   StringPtr sshString = 0;
   char* command=0;
@@ -386,7 +394,8 @@ StringPtr prepareCommand(RemoteCmdPtr cmd, char* ipFile, char* opFile, int execH
 	      ,execHomeDir,TEMP_DIR,ipFile,cmdText->text);
     }
   }
-  if(DEBUG2)	printf("Command is %s\n",command);
+  if(DBG_GEN)
+    printf("Exec command is %s\n",command);
   sshString->text = command;
   sshString->length = length;
   return sshString;
@@ -405,7 +414,8 @@ void makeTempDir(){
       char mkDirCmd[length+1];
       memset(mkDirCmd,0,length+1);
       sprintf(mkDirCmd,"mkdir \"%s%s\" %s",homeDir,TEMP_DIR,REDIR_NULL);
-      //printf("1 The mkDirCmd is %s\n",mkDirCmd);
+      if(DBG_GEN)
+	printf("1 The mkDirCmd is %s\n",mkDirCmd);
       //printf("1 Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
       //system(mkDirCmd);
     }
@@ -415,7 +425,8 @@ void makeTempDir(){
       char mkDirCmd[length+1];
       memset(mkDirCmd,0,length+1);
       sprintf(mkDirCmd,"ssh %s 'mkdir \"%s%s\" %s'",sshString->text,homeDir,TEMP_DIR, REDIR_NULL);
-      //printf("The mkDirCmd is %s\n",mkDirCmd);
+      if(DBG_GEN)
+	printf("2 The mkDirCmd is %s\n",mkDirCmd);
       //printf("Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
       //system(mkDirCmd);
     }    

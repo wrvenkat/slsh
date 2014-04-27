@@ -17,13 +17,16 @@ FilePtr processPath1(ArgPtr pathArg){
 
 //processes the Word argument and returns a FILE_ struct if true
 FilePtr processWord1(ArgPtr wordArg){
+  if(!wordArg)	return 0;
+  if(DBG_PLAN)
+    printf("processWord1 for arg %s\n",wordArg->text);
   FilePtr tempFilePtr =0;
   //check if the word is a path or a local file
   if(isFilePath(wordArg->text)){
     tempFilePtr = getFileStruct(wordArg->text);    
     if(tempFilePtr){
-      //if(DEBUG1)
-      //printf("In processWord1 Host:%d ActualPath:%s Size:%d\n",tempFilePtr->host,tempFilePtr->actualPath,tempFilePtr->size);
+      if(DBG_GEN)
+	printf("processWord1: Host:%d ActualPath:%s Size:%d\n",tempFilePtr->host,tempFilePtr->actualPath,tempFilePtr->size);
       return tempFilePtr;
     }
   }
@@ -41,7 +44,8 @@ FilePtr processWord1(ArgPtr wordArg){
   char* newFilePath = (char*)malloc(sizeof(char)*(strlen(currWD)+strlen(wordArg->text)+1));
   memset(newFilePath,0,strlen(currWD)+strlen(wordArg->text)+1);
   sprintf(newFilePath,"%s/%s",currWD,wordArg->text);
-  // if(DEBUG1)	printf("The newFilePath is %s\n",newFilePath);  
+  if(DBG_GEN)
+    printf("processWord1: The newFilePath is %s\n",newFilePath);  
   tempFilePtr = getFileStruct(newFilePath);
   free(newFilePath);
   return tempFilePtr;
@@ -51,6 +55,8 @@ FilePtr processWord1(ArgPtr wordArg){
 //filestructure pointer if the argument word is a valid file
 FilePtr makeArgPlan1(ArgPtr currArg){
   if(!currArg)	return 0;
+  if(DBG_PLAN)
+    printf("makeArgPlan1 for arg %s\n",currArg->text);
   ArgPtr tempArgPtr = currArg;
   if(!tempArgPtr)
     return 0;  
@@ -88,7 +94,8 @@ FilePtr makeArgPlan1(ArgPtr currArg){
 //present in its arg list
 void makeCmdPlan1(CommandPtr cmd){
   if(!cmd)	return;
-  //printf("makeCmdPlan1 for the command %s\n",cmd->name);
+  if(DBG_PLAN)
+    printf("makeCmdPlan1 for the command %s\n",cmd->name);
   ArgPtr tempArgPtr = cmd->headArgs;
   if(!tempArgPtr && cmd->currOutputRedir)
     tempArgPtr = createArg(strdup(cmd->name),WORDT);
@@ -127,7 +134,7 @@ void makeCmdPlan1(CommandPtr cmd){
   if(targetHost!=-1){
     //set the host where this command needs to be executed
     cmd->execHost=targetHost;
-    //if(DEBUG2)
+    if(DBG_PLAN)
       printf("The target execution host for %s command is %d\n",cmd->name, targetHost);
   }
   else
@@ -137,7 +144,10 @@ void makeCmdPlan1(CommandPtr cmd){
 
 //the bootstrap function to make the plan starting with each command
 void makePlan1(CommandPtr cmdHeadPtr){
-  //printf("Inside planning\n");
+  if(DBG_PLAN){
+    printf("------------begin Plan1---------------\n");
+    printf("Inside makePlan1\n");
+  }
   if(!cmdHeadPtr)
     return;  
   CommandPtr tempCmdPtr = cmdHeadPtr;
@@ -145,6 +155,8 @@ void makePlan1(CommandPtr cmdHeadPtr){
     makeCmdPlan1(tempCmdPtr);    
     tempCmdPtr=tempCmdPtr->next;
   }
+  if(DBG_PLAN)
+    printf("------------end Plan1---------------\n");
 }
 
 //this function traverses the pipeline list and fixes any < filename with cat filename

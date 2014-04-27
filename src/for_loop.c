@@ -19,7 +19,8 @@ ForLoopPtr createForLoop(char* varName, char* expr){
 //frees the ForLoop and its fields
 void freeForLoop(ForLoopPtr forLoop){
   if(!forLoop)	return;
-  //printf("Inside freeForLoop\n");
+  if(DBG_FREE)
+    printf("Inside freeForLoop\n");
   freePipelineList(forLoop->pipeline);
   freePipelineList(forLoop->newPipeline);
   free(forLoop->expr);
@@ -39,19 +40,20 @@ glob_t* getFileList(char* expr){
   memset(newExpr,0,len+1);
   //printf("Char at expr+1 is %c and char at expr+1+len is %c\n",*(expr+1),*(expr+1+len));
   snprintf(newExpr,len+1,"%s",expr+1);
-  printf("New expression is %s\n",newExpr);  
+  if(DBG_GEN)
+    printf("getFileList: New expression is %s\n",newExpr);  
   glob_t* glob_results = malloc(sizeof(glob_t));
   //get the glob results for the current directory
   int retValue = glob(newExpr, GLOB_NOCHECK, 0, glob_results);
   if(retValue!=0){
     if(retValue==GLOB_NOMATCH)
-      printf("No match found!\n");
+      fprintf(stderr,"No match found!\n");
     return 0;
   }
-  printf("Number of matching path here is %d\n",(int)(glob_results->gl_pathc));
+  //printf("Number of matching path here is %d\n",(int)(glob_results->gl_pathc));
   //printf("THe first one is %s\n",glob_results->gl_pathv[0]);
   if(!strcmp(glob_results->gl_pathv[0],newExpr)){
-    printf("glob_results empty!\n");
+    fprintf(stderr,"glob_results empty!\n");
     return 0;
   }  
   return glob_results;  
@@ -61,8 +63,10 @@ glob_t* getFileList(char* expr){
 int manageReferences(ForLoopPtr currForLoop){
   printf("--------begin manageReferences----------\n");
   glob_t* glob_results = getFileList(currForLoop->expr);
-  if(!glob_results)
-    return 0;  
+  if(!glob_results){
+    printf("--------end manageReferences------------\n");
+    return 0;
+  }
   manageReferencesInLoop(currForLoop->varName,(int)(glob_results->gl_pathc),glob_results->gl_pathv,currForLoop);
   globfree(glob_results);
   printf("--------end manageReferences------------\n");
@@ -86,7 +90,8 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
   PipelineListPtr newPipelineTail=0;
   char* reference = malloc(sizeof(char)*(strlen(varName)+2));
   sprintf(reference,"$%s",varName);
-  printf("The reference is %s\n",reference);
+  if(DBG_GEN)
+    printf("manageReferencesInLoop: The reference is %s\n",reference);
   while(i<count){
     PipelineListPtr newPipeline = 0;      
     PipelineListPtr currPipeline = currForLoop->pipeline;
@@ -120,7 +125,8 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
 //this function goes through each pipeline tree and returns a new pipeline tree
 //with their references replaced
 PipelineListPtr manageReferencesInPipeline(PipelineListPtr pipeline,char* reference, char* filePath){
-  //printf("Inside manageReferencesInPipeline\n");
+  if(DBG_FUNC_ENTRY)
+    printf("Inside manageReferencesInPipeline\n");
   CommandPtr currCmdPtr = pipeline->headCommand;
   CommandPtr cmdPtrListHead=0;
   CommandPtr cmdPtrListTail=0;
@@ -143,14 +149,15 @@ PipelineListPtr manageReferencesInPipeline(PipelineListPtr pipeline,char* refere
   PipelineListPtr newPipeline = createPipelineList();
   newPipeline->headCommand=cmdPtrListHead;
   //print the pipeline and see  
-  printPipeline(newPipeline);  
+  //printPipeline(newPipeline);  
   return newPipeline;
 }
 
 //this function goes through each of the individual fields of a command struct
 //looking for references of varName and replace it with filePath
 CommandPtr manageReferencesInCmd(CommandPtr cmd,char* reference, char* filePath){
-  //printf("Inside manageReferencesInCmd for command %s\n",cmd->name);
+  if(DBG_FUNC_ENTRY)
+    printf("Inside manageReferencesInCmd for command %s\n",cmd->name);
   //create a new CommandPtr
   CommandPtr newCmd = createCommand(cmd->name,0);  
   newCmd->currOutputRedir=cmd->currOutputRedir;
@@ -167,7 +174,8 @@ CommandPtr manageReferencesInCmd(CommandPtr cmd,char* reference, char* filePath)
   if(replacement){
     free(newCmd->name);
     newCmd->name = replacement;
-    printf("The new command name is %s\n",replacement);
+    if(DBG_GEN)
+      printf("manageReferencesInCmd: The new command name is %s\n",replacement);
   }
   ArgPtr currArgPtr = cmd->headArgs;
   //now the arguments
@@ -192,17 +200,20 @@ CommandPtr manageReferencesInCmd(CommandPtr cmd,char* reference, char* filePath)
 //this function manages the reference in the
 //current argument
 ArgPtr manageReferencesInArg(ArgPtr currArg,char* reference,char* filePath){
-  //printf("Inside manageReferencesInArg for argument %s\n",currArg->text);
+  if(DBG_FUNC_ENTRY)
+    printf("Inside manageReferencesInArg for argument %s\n",currArg->text);
   ArgPtr newArg = createArg(strdup(currArg->text),currArg->type);
   //look for the reference anywhere in the text of the argument
   //besides we don't have to look at other fields because they musn't have
   //been used or populated yet
-  printf("The original text is:%s\n",newArg->text);
+  if(DBG_GEN)
+    printf("manageReferencesInArg: Pre-replacement text is:%s\n",newArg->text);
   char* replacedText = replaceOccurence(newArg->text,strlen(newArg->text), reference,filePath);
   if(replacedText){
     free(newArg->text);
     newArg->text = replacedText;
-    printf("Post replacement text is:%s\n",replacedText);
+    if(DBG_GEN)
+      printf("manageReferencesInArg: Post-replacement text is:%s\n",replacedText);
   }  
   return newArg;
 }
@@ -211,7 +222,8 @@ ArgPtr manageReferencesInArg(ArgPtr currArg,char* reference,char* filePath){
 //does so recursively until all of it has been analysed
 //remLength is the remaining length of the text to be analysed
 char* replaceOccurence(char* text,int remLength, char* reference, char* filePath){
-  //printf("Inside replaceOccurence for text %s and length %d\n",text,remLength);
+  if(DBG_FUNC_ENTRY)
+    printf("Inside replaceOccurence for text %s and length %d\n",text,remLength);
   if(remLength<=0 || !text)	return 0;
   //get the position of the first occurence of the
   //reference
@@ -234,8 +246,8 @@ char* replaceOccurence(char* text,int remLength, char* reference, char* filePath
       charPtr+=posPtr-text;      
       sprintf(charPtr,"%s%s",filePath, replacedText);
       free(replacedText);
-      printf("1 Original Text here is:%s\n",text);
-      printf("1 Replaced Text here is:%s\n",replacedTextNew);
+      //printf("1 Original Text here is:%s\n",text);
+      //printf("1 Replaced Text here is:%s\n",replacedTextNew);
       return replacedTextNew;
     }
     else{

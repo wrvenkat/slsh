@@ -14,9 +14,6 @@ StringPtr createString(){
 void freeString(StringPtr stringPtr){  
   if(!stringPtr)	return;  
   free(stringPtr->text);  
-  stringPtr->length=0;
-  //something strange is going on here!
-  //freeing this stringPtr causes 
-  //"free(): invalid next size (fast)"  
+  stringPtr->length=0;  
   free(stringPtr);  
 }

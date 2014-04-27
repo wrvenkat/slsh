@@ -53,11 +53,12 @@ PipelineListPtr createPipelineList(){
 
 //the bootstrap function that starts the processing of the whole parse tree
 void startProcessing(){
-  //if(DEBUG1)
-  printHostMap();
+  if(DBG_HOSTMAP_PRINT)
+    printHostMap();
   InputUnitPtr ipUnitPtr = headPtr;
   if(!ipUnitPtr)	return;
-  printTree();
+  if(DBG_CMD_TREE_PRINT)
+    printTree();
   if(ipUnitPtr->type==FORLOOPT){
     ForLoopPtr currForLoop = (ForLoopPtr)(headPtr->inputUnit);
     //fix any references in the forloop    
@@ -90,21 +91,18 @@ void processPipelineList(PipelineListPtr pipeline){
 //function used by startProcessing
 void processPipeline(PipelineListPtr pipeline){
   CommandPtr cmdHeadPtr = pipeline->headCommand;
-  makePlan1(cmdHeadPtr);
-  printf("---------Begin------makeRemoteCmd-------\n");
+  makePlan1(cmdHeadPtr);  
   RemoteCmdPtr remoteCmdHeadPtr =  makeRemoteCmd(cmdHeadPtr);
-  printf("---------End--------makeRemoteCmd-------\n");
-  //if(DEBUG1)
-  printf("---------Begin------printRemoteCmdTree--\n");
-  printRemoteCmdTree(remoteCmdHeadPtr);
-  printf("---------End--------printRemoteCmdTree--\n");
+  if(DBG_RMTE_CMD_TREE_PRINT)
+    printRemoteCmdTree(remoteCmdHeadPtr);  
   executePlan(remoteCmdHeadPtr);
 }
 
 //function that frees all the pipelines in this list
 void freePipelineList(PipelineListPtr currPipeline){
   if(!currPipeline)	return;
-  printf("Inside freePipelineList\n");
+  if(DBG_FREE)
+    printf("Inside freePipelineList\n");
   PipelineListPtr tempPipeline = currPipeline;  
   PipelineListPtr tempNextPipeline = 0;  
   while(tempPipeline){
@@ -117,7 +115,8 @@ void freePipelineList(PipelineListPtr currPipeline){
 //frees all the commands in the current pipeline
 void freePipeline(CommandPtr headCmdPtr){
   if(!headCmdPtr)	return;
-  printf("Inside freePipeline\n");
+  if(DBG_FREE)
+    printf("Inside freePipeline\n");
   CommandPtr currCmdPtr = headCmdPtr;
   CommandPtr tempCmdPtr = 0;
   while(currCmdPtr){
@@ -131,7 +130,8 @@ void freePipeline(CommandPtr headCmdPtr){
 //and its idividual fields
 void freeCommandPtr(CommandPtr cmd){
   if(!cmd)	return;
-  printf("Inside freeCommandPtr\n");
+  if(DBG_FREE)
+    printf("Inside freeCommandPtr\n");
   free(cmd->name);
   ArgPtr currArg = cmd->headArgs;
   while(currArg){
@@ -146,7 +146,8 @@ void freeCommandPtr(CommandPtr cmd){
 // and all of its fields
 void freeArgPtr(ArgPtr arg){
   if(!arg)	return;
-  printf("Inside freeArgPtr for arg %s\n",arg->text);
+  if(DBG_FREE)
+    printf("Inside freeArgPtr for arg %s\n",arg->text);
   free(arg->text);
   FilePtr currFile = arg->filePtr;
   while(currFile){
@@ -161,9 +162,10 @@ void freeArgPtr(ArgPtr arg){
 // and all of its fields
 void freeFilePtr(FilePtr currFile){
   if(!currFile)	return;
-  printf("Inside freeFilePtr freeing %s\n",currFile->origPath);
+  if(DBG_FREE)
+    printf("Inside freeFilePtr freeing %s\n",currFile->origPath);
   free(currFile->actualPath);
-  //free(currFile->origPath);
-  //free(currFile->remotePath);
-  //free(currFile);
+  free(currFile->origPath);
+  free(currFile->remotePath);
+  free(currFile);
 }

@@ -76,7 +76,8 @@ char* getRidOfEscapeChars(char* filePath){
 
 //this function returns a FILE_ structure for a given valid fileStr
 FilePtr getFileStruct(char* fileStr){
-  //printf("FileStr in getFileStruct is %s\n",fileStr);
+  if(DBG_FUNC_ENTRY)
+    printf("FileStr in getFileStruct is %s\n",fileStr);
   struct stat* newStat = malloc(sizeof(struct stat));
   char* actualPath = getRidOfEscapeChars(fileStr);
   //printf("After getRidOfEscapeChars is %s\n",actualPath);
@@ -101,14 +102,13 @@ FilePtr getFileStruct(char* fileStr){
     newFile->size=(int)newStat->st_size;
     newFile->actualPath=strdup(actualPath);
     newFile->origPath=strdup(fileStr);
-    //if(DEBUG2)
+    if(DBG_FILE)
       printf("Size: %d bytes Host: %d ActPath: %s origPath: %s MinId: %d and MajId: %d\n",newFile->size,
 	     newFile->host,newFile->actualPath,newFile->origPath,newFile->minId,majId);
     free(actualPath);
     return newFile;
   }
-  else{    
-    //printf("Returning 0 from getFileStruct with errorno %d\n",errno);
+  else{
     return 0;
   }
 }
@@ -131,7 +131,7 @@ void createHostMap(){
   struct mntent* mntEnt=0;  
   FILE *fp = setmntent("/etc/mtab", "r");
   if(!fp)
-    fprintf(stdout,"ERROR: Unable to open file for reading\n");
+    fprintf(stderr,"ERROR: Unable to open file for reading\n");
   else{
     //special values for host 0 - local machine
     hostMap[0]=malloc(sizeof(HOSTINFO));
@@ -179,8 +179,8 @@ void compRegex(){
   //this is different from the other lexer.l's in that the other regex has to parse the 
   //sequence "\[\t\r\v]" where as here "\ " is actually "\\ " in the other regex
   if(regcomp(&fileReg,FILE_REGEX,0 | REG_ICASE | REG_EXTENDED | REG_NOSUB)!=0){
-    if(DEBUG1)
-      fprintf(stdout,"FilePath regex compilation failed");
+    //if(DBG_GEN)
+      fprintf(stderr,"FilePath regex compilation failed");
   }
 }
 
@@ -197,7 +197,8 @@ char* getHomeDir(char* fsName){
 
 //returns the filename given the filePath
 char* getFileName(char* filePath){
-  //printf("Given path is %s\n",filePath);
+  if(DBG_FUNC_ENTRY)
+    printf("Given path is %s\n",filePath);
   if(strrchr(filePath, '/'))    
     return (strrchr(filePath, '/')+1);
   else

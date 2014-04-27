@@ -86,8 +86,8 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
     filePath->text=filePathStr;
     filePath->length=length-1;    
   }  
-  //if(DEBUG1) 
-  //printf("Modified filepath at getFilePath is %s of length %d\n",filePath->text,filePath->length);
+  if(DBG_GEN)
+    printf("getFilePath: Modified filepath is %s of length %d\n",filePath->text,filePath->length);
   return filePath;
 }
 
@@ -116,7 +116,8 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	    CommandPtr newCmdPtr = createCommand(strdup(cmd->name),0);
 	    newCmdPtr->name = strdup(cmd->name);
 	    newCmdPtr->execHost = currFilePtr->host;
-	    printf("After making the command name now is %s\n",newCmdPtr->name);
+	    if(DBG_GEN)
+	      printf("getRemoteCmdTextFromOutputCmd: After making the command name now is %s\n",newCmdPtr->name);
 	    return newCmdPtr;
 	  }
 	  else{
@@ -127,7 +128,8 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	    sprintf(text,"%s%s",homeDir,filePath+1+strlen(hostMap[currFilePtr->host]->mnt_dir));
 	    CommandPtr newCmdPtr = createCommand(text,0);
 	    newCmdPtr->execHost = currFilePtr->host;
-	    printf("After making the command name now is %s\n",newCmdPtr->name);	    
+	    if(DBG_GEN)
+	      printf("getRemoteCmdTextFromOutputCmd: After making the command name now is %s\n",newCmdPtr->name);	    
 	    return newCmdPtr;
 	  }  
 	}
@@ -138,7 +140,8 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	if(currDirFile->host==0){
 	  CommandPtr newCmdPtr = createCommand(strdup(cmd->name),0);	
 	  newCmdPtr->execHost = currDirFile->host;
-	  printf("After making the command name now is %s\n",newCmdPtr->name);
+	  if(DBG_GEN)
+	    printf("getRemoteCmdTextFromOutputCmd: After making the command name now is %s\n",newCmdPtr->name);
 	  return newCmdPtr;
 	}
 	else{
@@ -151,7 +154,8 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	  //printf("The target dir is %s\n",text);
 	  CommandPtr newCmdPtr = createCommand(text,0);
 	  newCmdPtr->execHost = currDirFile->host;
-	  printf("After making the command name now is %s\n",newCmdPtr->name);
+	  if(DBG_GEN)
+	    printf("getRemoteCmdTextFromOutputCmd: After making the command name now is %s\n",newCmdPtr->name);
 	  return newCmdPtr;
 	}
       }
@@ -164,7 +168,8 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
       sprintf(text,"%s/%s",currWD,cmd->name);
       CommandPtr newCmdPtr = createCommand(text,0);
       newCmdPtr->execHost = 0;
-      printf("After making the command name now is %s\n",newCmdPtr->name);
+      if(DBG_GEN)
+	printf("getRemoteCmdTextFromOutputCmd: After making the command name now is %s\n",newCmdPtr->name);
       return newCmdPtr;
     }
   }
@@ -245,8 +250,8 @@ RemoteCmdTextPtr getRemoteCmdTextFromCmd(CommandPtr cmd){
     remoteCmdText->text=cmdText;
     remoteCmdText->length=totalLengthCombined;
     //freeStringList(argListHeadPtr);
-    //if(DEBUG1)	
-    //printf("The command with modified filePath is %s\n",remoteCmdText->text);
+    if(DBG_GEN)
+      printf("getRemoteCmdTextFromCmd: The command with modified filePath is %s\n",remoteCmdText->text);
     remoteCmdTextPtr->cmdText=remoteCmdText;
     return remoteCmdTextPtr;
   }
@@ -283,7 +288,8 @@ char* createCmdStringFromList(CommandPtr startCmd, CommandPtr endCmd, RemoteCmdT
     tempRemoteCmdTextPtr=tempRemoteCmdTextPtr->next;
     tempCmdPtr=tempCmdPtr->next;
   }
-  if(DEBUG1) printf("The combined cmd string is %s\n",combinedCmdString);
+  if(DBG_GEN)
+    printf("createCmdStringFromList: The combined cmd string is %s\n",combinedCmdString);
   return combinedCmdString;
 }
 
@@ -374,9 +380,10 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
     return 0;
   //if we don't have more than one command to combine
   if(!prevCmdPtr){
-    //printf("Inside _makeRemoteCmd 1\n");
-    //printf("_makeRemoteCmd1 for command %s\n",currCmdPtr->name);
-
+    if(DBG_MAKE_RMTE_CMD){
+      //printf("Inside _makeRemoteCmd 1\n");
+      printf("_makeRemoteCmd1 for command %s\n",currCmdPtr->name);
+    }
     //if theres no need to combine commands then we need to generate the text part just for
     //this command and add it to the remoteCmdTailPtr or head Pointer  
     RemoteCmdPtr currRemoteCmdPtr = createRemoteCmd();
@@ -400,14 +407,18 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
 	//printf("getRemoteCmdTextFromOutputCmd: After processing the command name is %s\n",currRemoteCmdPtr->cmdText->text);
 	//we are only interested in the text part
 	//so once copied we free it
-	//freeCommandPtr(newCmdPtr);
+	freeCommandPtr(newCmdPtr);
       }
     }
     else
       currRemoteCmdPtr->cmdText = getRemoteCmdTextFromCmd(currCmdPtr)->cmdText;
     if(currRemoteCmdPtr)
       //now get the list of files to be transferred for this group of command
-      currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,0);      
+      currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,0);
+    if(!recursive){
+      if(DBG_MAKE_RMTE_CMD)
+	printf("cmdText->text of the RemoteCmdPtr is %s\n",currRemoteCmdPtr->cmdText->text);
+    }
     return currRemoteCmdPtr;
   }
   //if we need to do a recursive call
@@ -472,10 +483,11 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
     currRemoteCmdPtr->cmdText->length = strlen(currRemoteCmdPtr->cmdText->text);
     
     //now get the list of files to be transferred for this group of command
-    currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,prevCmdPtr);       
-       
+    currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,prevCmdPtr);
+    if(DBG_MAKE_RMTE_CMD)
+      printf("cmdText->text of the RemoteCmdPtr is %s\n",currRemoteCmdPtr->cmdText->text);
     return currRemoteCmdPtr;
-  }  
+  }
   return 0;
 }
 
@@ -489,6 +501,7 @@ void printTransferList(FilePtr head){
 
 //print the command tree
 void printRemoteCmdTree(RemoteCmdPtr remoteCmdHeadPtr){
+  printf("---------Begin------printRemoteCmdTree------------------\n");
   RemoteCmdPtr tempRemoteCmdPtr = remoteCmdHeadPtr;  
   while(tempRemoteCmdPtr){
     if(tempRemoteCmdPtr->currOutputRedir)
@@ -499,13 +512,17 @@ void printRemoteCmdTree(RemoteCmdPtr remoteCmdHeadPtr){
     if(tempRemoteCmdPtr->next && !(tempRemoteCmdPtr->next->currOutputRedir))
       printf(" | ");    
     tempRemoteCmdPtr=tempRemoteCmdPtr->next;    
-  }  
+  }
+  printf("---------End--------printRemoteCmdTree------------------\n");
 }
 
 //the bootstrap function that calls _makeRemoteCmd
 RemoteCmdPtr makeRemoteCmd(CommandPtr cmdHeadPtr){
-  //printf("In makeRemoteCmd\n");
-  //fflush(stdout);
+  if(DBG_MAKE_RMTE_CMD){
+    printf("---------Begin------makeRemoteCmd-------\n");
+    printf("In makeRemoteCmd\n");
+  }
+  
   RemoteCmdPtr remoteCmdHeadPtr;
   RemoteCmdPtr remoteCmdTailPtr;
   RemoteCmdPtr currRemoteCmdPtr;
@@ -564,14 +581,17 @@ RemoteCmdPtr makeRemoteCmd(CommandPtr cmdHeadPtr){
     }        
     temp1CmdPtr=temp1CmdPtr->next;    
   }
-  //printf("Returning from makeRemoteCmd\n");
+  if(DBG_MAKE_RMTE_CMD)
+    printf("---------End--------makeRemoteCmd-------\n");
   return remoteCmdHeadPtr;
 }
 
 //this function frees the RemoteCmdPtr and all of 
 //its fields
 void freeRemoteCmdPtr(RemoteCmdPtr remoteCmdPtr){
-  printf("Inside freeRemoteCmdPtr\n");
+  if(!remoteCmdPtr)	return;
+  if(DBG_FREE)
+    printf("Inside freeRemoteCmdPtr\n");
   freeString(remoteCmdPtr->cmdText);
   FilePtr currFilePtr = remoteCmdPtr->transferFileList;
   while(currFilePtr){
