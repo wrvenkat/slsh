@@ -170,5 +170,5 @@ void fixIPRedir(CommandPtr cmdHeadPtr){
   cmdHeadPtr = catCmdPtr;
   //now free the useless inputredir node
   //an ugly free
-  free(inputRedirCmd);
+  freeCommandPtr(inputRedirCmd);
 }
