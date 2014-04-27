@@ -17,7 +17,7 @@ CommandPtr createCommand(char* cmdName, ArgPtr argsList){
 }
 
 /*creates a new FILELIST*/
-FilePtr createFileList(char* path, int host){
+FilePtr createFile(char* path, int host){
   FilePtr filePtr = (FilePtr)malloc(sizeof(FILE_));
   memset(filePtr,0,sizeof(FILE_));
   filePtr->origPath=path;
@@ -51,47 +51,6 @@ PipelineListPtr createPipelineList(){
   return pipelineListPtr;
 }
 
-//this function deallocates the CommandPtr
-//and its idividual fields
-void freeCommandPtr(CommandPtr cmd){
-  if(!cmd)	return;
-  //printf("Inside freePipelineList\n");
-  free(cmd->name);
-  ArgPtr currArg = cmd->headArgs;
-  while(currArg){
-    ArgPtr tempArg = currArg->next;
-    freeArgPtr(currArg);
-    currArg = tempArg;
-  }
-  free(cmd);
-}
-
-//this function deallocates the given ArgPtr
-// and all of its fields
-void freeArgPtr(ArgPtr arg){
-  if(!arg)	return;
-  printf("Inside freeArgPtr\n");
-  free(arg->text);
-  FilePtr currFile = arg->filePtr;
-  while(currFile){
-    FilePtr tempFile = currFile->next;
-    //freeFilePtr(currFile);
-    currFile= tempFile;
-  }
-  free(arg);
-}
-
-//this function deallocates the given FilePtr
-// and all of its fields
-void freeFilePtr(FilePtr currFile){
-  if(!currFile)	return;
-  printf("Inside freeFilePtr freeing %s\n",currFile->origPath);
-  //free(currFile->actualPath);
-  //free(currFile->origPath);
-  //free(currFile->remotePath);  
-  //free(currFile);
-}
-
 //the bootstrap function that starts the processing of the whole parse tree
 void startProcessing(){
   //if(DEBUG1)
@@ -107,11 +66,11 @@ void startProcessing(){
     printf("--------end manageReferences------------\n");
     //now process the for loop
     processForLoop(currForLoop);
-    //freeForLoop(currForLoop);
+    freeForLoop(currForLoop);
   }
   else if(ipUnitPtr->type==PIPELINELST){
     processPipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
-    //freePipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
+    freePipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
   }
 }
 
@@ -170,9 +129,43 @@ void freePipeline(CommandPtr headCmdPtr){
   }
 }
 
+//this function deallocates the CommandPtr
+//and its idividual fields
+void freeCommandPtr(CommandPtr cmd){
+  if(!cmd)	return;
+  printf("Inside freeCommandPtr\n");
+  free(cmd->name);
+  ArgPtr currArg = cmd->headArgs;
+  while(currArg){
+    ArgPtr tempArg = currArg->next;
+    freeArgPtr(currArg);
+    currArg = tempArg;
+  }
+  free(cmd);
+}
 
+//this function deallocates the given ArgPtr
+// and all of its fields
+void freeArgPtr(ArgPtr arg){
+  if(!arg)	return;
+  printf("Inside freeArgPtr for arg %s\n",arg->text);
+  free(arg->text);
+  FilePtr currFile = arg->filePtr;
+  while(currFile){
+    FilePtr tempFile = currFile->next;
+    freeFilePtr(currFile);
+    currFile= tempFile;
+  }
+  free(arg);
+}
 
-
-
-
-
+//this function deallocates the given FilePtr
+// and all of its fields
+void freeFilePtr(FilePtr currFile){
+  if(!currFile)	return;
+  printf("Inside freeFilePtr freeing %s\n",currFile->origPath);
+  free(currFile->actualPath);
+  //free(currFile->origPath);
+  //free(currFile->remotePath);
+  //free(currFile);
+}

@@ -152,7 +152,7 @@ void makePlan1(CommandPtr cmdHeadPtr){
 void fixIPRedir(CommandPtr cmdHeadPtr){
   if(!cmdHeadPtr)	return;  
   CommandPtr tempCmdPtr = cmdHeadPtr;
-  //CommandPtr prevCmdPtr = tempCmdPtr;
+  
   while(tempCmdPtr && !(tempCmdPtr->inputRedir))    
     tempCmdPtr=tempCmdPtr->next;
   //if no ip redir was found

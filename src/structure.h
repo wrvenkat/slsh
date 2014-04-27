@@ -93,7 +93,7 @@ CommandPtr createCommand(char* cmdName, ArgPtr argsList);
 void insertCommand(CommandPtr commandPtr);
 
 /*creates a new FILELIST*/
-FilePtr createFileList(char* path, int host);
+FilePtr createFile(char* path, int host);
 
 /*insert at the end of the args list of the command*/
 void insertFile(FilePtr filePtr,CommandPtr command);

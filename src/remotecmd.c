@@ -5,7 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "structure.h"
-
 #include "enums.h"
 
 //this function returns an initalised REMOTECMD struct pointer
@@ -59,7 +58,7 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
       filePath->length = strlen(filePath->text);      
     }
     else{
-      char* temp = /*getRidOfEscapeChars(*/arg->filePtr->actualPath/*)*/;      
+      char* temp = strdup(/*getRidOfEscapeChars(*/arg->filePtr->actualPath)/*)*/;
       //if so we need to only write the filename with the mountdir
       if(strlen(getFileDir(temp))!=strlen(mountDir)){    
 	length=strlen(homeDir)+(strlen(temp)-strlen(mountDir));
@@ -73,6 +72,7 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
 	memset(filePathStr,0,length+3);
 	sprintf(filePathStr,"\"%s%s\"",mountDir,fileName);
       }
+      free(temp);
       filePath->text=filePathStr;
       filePath->length=length;      
     }
@@ -122,12 +122,12 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	  else{
 	    char* homeDir = getHomeDir(hostMap[currFilePtr->host]->mnt_fsname);
 	    int length = strlen(homeDir)+(strlen(filePath)-strlen(hostMap[currFilePtr->host]->mnt_dir))+1;
-	    char* text = malloc(sizeof(char)*(length+1));
+	    char text[length+1];
 	    memset(text,0,length+1);
 	    sprintf(text,"%s%s",homeDir,filePath+1+strlen(hostMap[currFilePtr->host]->mnt_dir));
 	    CommandPtr newCmdPtr = createCommand(text,0);
 	    newCmdPtr->execHost = currFilePtr->host;
-	    printf("After making the command name now is %s\n",newCmdPtr->name);
+	    printf("After making the command name now is %s\n",newCmdPtr->name);	    
 	    return newCmdPtr;
 	  }  
 	}
@@ -145,7 +145,7 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	  char* homeDir = getHomeDir(hostMap[currDirFile->host]->mnt_fsname);
 	  int length = 0;
 	  length = strlen(homeDir)+(strlen(cmd->name)-strlen(hostMap[currDirFile->host]->mnt_dir));
-	  char* text = malloc(sizeof(char)*(length+1));
+	  char text[length+1];
 	  memset(text,0,length+1);
 	  sprintf(text,"%s%s",homeDir,strdup(cmd->name)+strlen(hostMap[currDirFile->host]->mnt_dir)+1);
 	  //printf("The target dir is %s\n",text);
@@ -158,10 +158,11 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
     }
     //if it is not a file then it should be relative to the current directory
     else{
-      char* text = malloc(sizeof(char)*(strlen(currWD)+strlen(cmd->name)+2));
-      memset(text,0,strlen(currWD)+strlen(cmd->name)+2);
+      int length = strlen(currWD)+strlen(cmd->name)+2;
+      char text[length];
+      memset(text,0,length);
       sprintf(text,"%s/%s",currWD,cmd->name);
-      CommandPtr newCmdPtr = createCommand(text,0);      
+      CommandPtr newCmdPtr = createCommand(text,0);
       newCmdPtr->execHost = 0;
       printf("After making the command name now is %s\n",newCmdPtr->name);
       return newCmdPtr;
@@ -304,7 +305,7 @@ FilePtr getTransferFileList(CommandPtr currCmdPtr, CommandPtr prevCmdPtr){
       if(tempFilePtr && tempFilePtr->host!=currCmdPtr->execHost){	
 	StringPtr remoteFilePath = getFilePath(currArgPtr,currCmdPtr->execHost);
 	if(remoteFilePath){
-	  currFilePtr = createFileList(strdup(tempFilePtr->origPath),tempFilePtr->host);
+	  currFilePtr = createFile(strdup(tempFilePtr->origPath),tempFilePtr->host);
 	  currFilePtr->actualPath = strdup(tempFilePtr->actualPath);
 	  currFilePtr->remotePath = strdup(remoteFilePath->text);
 	  currFilePtr->minId = tempFilePtr->minId;

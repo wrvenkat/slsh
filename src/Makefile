@@ -7,7 +7,7 @@ MV=/bin/mv
 RM=/bin/rm
 CP=/bin/cp
 
-LIBRARIES=  -ll
+LIBRARIES=-ll
 
 CFLAGS=-g -Wall
 YFLAGS=-d

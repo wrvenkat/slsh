@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include "globals.h"
 #include "enums.h"
+#include "structure.h"
 
 //intialize global variables and flags
 int initGlobals(){
@@ -80,7 +81,7 @@ FilePtr getFileStruct(char* fileStr){
   char* actualPath = getRidOfEscapeChars(fileStr);
   //printf("After getRidOfEscapeChars is %s\n",actualPath);
   if(!stat(actualPath, newStat)){
-    FilePtr newFile = malloc(sizeof(FILE_));
+    FilePtr newFile = createFile(0,-1);
     dev_t m1=newStat->st_dev;
     int minId=minor(m1);
     int majId=major(m1);
@@ -98,11 +99,12 @@ FilePtr getFileStruct(char* fileStr){
       host= getHostId(minId);
     newFile->host=host;
     newFile->size=(int)newStat->st_size;
-    newFile->actualPath=actualPath;
+    newFile->actualPath=strdup(actualPath);
     newFile->origPath=strdup(fileStr);
     //if(DEBUG2)
       printf("Size: %d bytes Host: %d ActPath: %s origPath: %s MinId: %d and MajId: %d\n",newFile->size,
 	     newFile->host,newFile->actualPath,newFile->origPath,newFile->minId,majId);
+    free(actualPath);
     return newFile;
   }
   else{    
