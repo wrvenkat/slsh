@@ -31,11 +31,13 @@ void printForLoop(ForLoopPtr currForLoop){
 
 //print the pipeline
 void printPipeline(PipelineListPtr pipeline){
+  printf("--------begin printPipeline-----------------\n");
   CommandPtr cmdPtr = pipeline->headCommand;  
   while(cmdPtr){
     printCommand(cmdPtr);
     cmdPtr=cmdPtr->next;
-  }  
+  }
+  printf("\n--------end printPipeline-----------------\n");
 }
 
 //print the command

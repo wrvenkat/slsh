@@ -19,7 +19,7 @@ ForLoopPtr createForLoop(char* varName, char* expr){
 //frees the ForLoop and its fields
 void freeForLoop(ForLoopPtr forLoop){
   if(!forLoop)	return;
-  printf("Inside freeForLoop\n");
+  //printf("Inside freeForLoop\n");
   freePipelineList(forLoop->pipeline);
   freePipelineList(forLoop->newPipeline);
   free(forLoop->expr);
@@ -59,11 +59,13 @@ glob_t* getFileList(char* expr){
 
 //the bootstrap function to manage references in the pipeline list
 int manageReferences(ForLoopPtr currForLoop){
+  printf("--------begin manageReferences----------\n");
   glob_t* glob_results = getFileList(currForLoop->expr);
   if(!glob_results)
     return 0;  
   manageReferencesInLoop(currForLoop->varName,(int)(glob_results->gl_pathc),glob_results->gl_pathv,currForLoop);
   globfree(glob_results);
+  printf("--------end manageReferences------------\n");
   return 1;
 }
 
@@ -93,8 +95,8 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
     memset(filePath,0,length+1+1);
     sprintf(filePath,"%s/%s",currWD,fileList[i]);      
     //printf("The actual filepath is %s and the reference is %s\n",filePath,reference);
-    //for each of the pipeline get a new pipeline for each occurence of the glob
-    //and has the reference replaced and add that reference list to the for loop
+    //for each of the pipeline get a new copy for each occurence of the glob
+    //and have the reference replaced and add that reference list to the for loop
     while(currPipeline){
       newPipeline= manageReferencesInPipeline(currPipeline,reference,/*filePath*/fileList[i]);
       if(newPipeline){
@@ -140,10 +142,8 @@ PipelineListPtr manageReferencesInPipeline(PipelineListPtr pipeline,char* refere
   }
   PipelineListPtr newPipeline = createPipelineList();
   newPipeline->headCommand=cmdPtrListHead;
-  //print the pipeline and see
-  printf("--------begin printPipeline-----------------\n");
-  printPipeline(newPipeline);
-  printf("\n--------end printPipeline-----------------\n");
+  //print the pipeline and see  
+  printPipeline(newPipeline);  
   return newPipeline;
 }
 

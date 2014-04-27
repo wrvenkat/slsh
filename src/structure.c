@@ -60,10 +60,8 @@ void startProcessing(){
   printTree();
   if(ipUnitPtr->type==FORLOOPT){
     ForLoopPtr currForLoop = (ForLoopPtr)(headPtr->inputUnit);
-    //fix any references in the forloop
-    printf("--------begin manageReferences----------\n");
-    manageReferences(currForLoop);
-    printf("--------end manageReferences------------\n");
+    //fix any references in the forloop    
+    manageReferences(currForLoop);    
     //now process the for loop
     processForLoop(currForLoop);
     freeForLoop(currForLoop);
