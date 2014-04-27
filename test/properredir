@@ -1,1 +1,1 @@
-cat /media/UbuntuEC2D/TestD/main.log /media/UbuntuEC2D/TestD/file\ create.sh /media/UbuntuEC2A/TestA/op.txt | grep -f /media/UbuntuEC2A/TestA/velocitygrep1 | wc -l > /media/Softwares/result.txt ;
+cat /media/UbuntuEC2D/TestD/main.log /media/UbuntuEC2D/TestD/file\ create.sh /media/UbuntuEC2A/TestA/op.txt | grep -f /media/UbuntuEC2A/TestA/velocitygrep1 > /media/Softwares/result.txt ;

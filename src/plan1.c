@@ -54,8 +54,8 @@ FilePtr makeArgPlan1(ArgPtr currArg){
   ArgPtr tempArgPtr = currArg;
   if(!tempArgPtr)
     return 0;  
-  FilePtr fileList = 0;
-  int fileListSize=0;
+  //FilePtr fileList = 0;
+  //int fileListSize=0;
   ArgType argType = tempArgPtr->type;    
   switch(argType){
     case WORDT:
@@ -88,14 +88,13 @@ FilePtr makeArgPlan1(ArgPtr currArg){
 //present in its arg list
 void makeCmdPlan1(CommandPtr cmd){
   if(!cmd)	return;
-  printf("makeCmdPlan1 for the command %s\n",cmd->name);
+  //printf("makeCmdPlan1 for the command %s\n",cmd->name);
   ArgPtr tempArgPtr = cmd->headArgs;
   if(!tempArgPtr && cmd->currOutputRedir)
     tempArgPtr = createArg(strdup(cmd->name),WORDT);
   else if(!tempArgPtr)
     return;
   
-  FilePtr largestFile=0;
   //this array holds the total file sizes
   //for hosts corresponding to the files
   //present in this command
@@ -109,8 +108,7 @@ void makeCmdPlan1(CommandPtr cmd){
     FilePtr currFile = makeArgPlan1(tempArgPtr);      
     if(currFile){
       hostFileSize[currFile->host]+=currFile->size;
-      tempArgPtr->filePtr=currFile;
-      //freeFilePtr(currFile);
+      tempArgPtr->filePtr=currFile;      
     }
     else
       tempArgPtr->filePtr=0;
@@ -154,7 +152,7 @@ void makePlan1(CommandPtr cmdHeadPtr){
 void fixIPRedir(CommandPtr cmdHeadPtr){
   if(!cmdHeadPtr)	return;  
   CommandPtr tempCmdPtr = cmdHeadPtr;
-  CommandPtr prevCmdPtr = tempCmdPtr;
+  //CommandPtr prevCmdPtr = tempCmdPtr;
   while(tempCmdPtr && !(tempCmdPtr->inputRedir))    
     tempCmdPtr=tempCmdPtr->next;
   //if no ip redir was found

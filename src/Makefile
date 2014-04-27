@@ -9,7 +9,7 @@ CP=/bin/cp
 
 LIBRARIES=  -ll
 
-CFLAGS=-g
+CFLAGS=-g -Wall
 YFLAGS=-d
 STATEREPORT=
 #-v --report=state

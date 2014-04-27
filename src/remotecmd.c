@@ -38,8 +38,7 @@ void printRemoteCmdTextList(RemoteCmdTextPtr list){
 StringPtr getFilePath(ArgPtr arg, int execHost){
   //printf("Argument at getFilePath is %s\n",arg->text);
   //if the filePtr has been set, then we get the necessary details from there
-  if(!(arg->filePtr)){
-    //printf("FilePtr for argument is null\n");
+  if(!(arg->filePtr)){    
     return 0;
   }
   //get the home directory on the remote machine where the file is present
@@ -53,26 +52,30 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
   StringPtr filePath = createString();
   int length=0;
   if(execHost==fileHostId){
-    char* temp = getRidOfEscapeChars(arg->filePtr->origPath);
-    //printf("temp here is %s\n",temp);
-    //printf("actualPath is %s\n",arg->filePtr->actualPath);
-    //printf("mountDir is %s\n",mountDir);
-    //if so we need to only write the filename with the mountdir
-    if(strlen(getFileDir(temp))!=strlen(mountDir)){    
-      length=strlen(homeDir)+(strlen(temp)-strlen(mountDir));
-      filePathStr = malloc(sizeof(char)*(length+3));
-      memset(filePathStr,0,length+3);
-      sprintf(filePathStr,"\"%s%s\"",homeDir,temp+strlen(mountDir)+1);
+    //if the file is local, then we just need to get the
+    //actual path to it
+    if(execHost==0){      
+      filePath->text= strdup(arg->filePtr->actualPath);
+      filePath->length = strlen(filePath->text);      
     }
-    else{      
-      length=strlen(mountDir)+strlen(fileName);
-      filePathStr = malloc(sizeof(char)*(length+3));
-      memset(filePathStr,0,length+3);
-      sprintf(filePathStr,"\"%s%s\"",mountDir,fileName);
+    else{
+      char* temp = /*getRidOfEscapeChars(*/arg->filePtr->actualPath/*)*/;      
+      //if so we need to only write the filename with the mountdir
+      if(strlen(getFileDir(temp))!=strlen(mountDir)){    
+	length=strlen(homeDir)+(strlen(temp)-strlen(mountDir));
+	filePathStr = malloc(sizeof(char)*(length+3));
+	memset(filePathStr,0,length+3);
+	sprintf(filePathStr,"\"%s%s\"",homeDir,temp+strlen(mountDir)+1);
+      }
+      else{      
+	length=strlen(mountDir)+strlen(fileName);
+	filePathStr = malloc(sizeof(char)*(length+3));
+	memset(filePathStr,0,length+3);
+	sprintf(filePathStr,"\"%s%s\"",mountDir,fileName);
+      }
+      filePath->text=filePathStr;
+      filePath->length=length;      
     }
-    filePath->text=filePathStr;
-    filePath->length=length;
-    //free(temp);
   }
   else{
     length=strlen(homeDir)+strlen(fileName)+strlen(TEMP_DIR);
@@ -81,10 +84,8 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
     memset(filePathStr,0,length);
     sprintf(filePathStr,"\"%s%s%s\"",homeDir,TEMP_DIR,fileName);
     filePath->text=filePathStr;
-    filePath->length=length-1;
-    free(homeDir);    
-  }
-  //printf("String is %s\n",filePathStr);
+    filePath->length=length-1;    
+  }  
   //if(DEBUG1) 
   //printf("Modified filepath at getFilePath is %s of length %d\n",filePath->text,filePath->length);
   return filePath;
@@ -92,32 +93,33 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
 
 //gets the text for the target file of an output redirection
 CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
+  //printf("Inside getRemoteCmdTextFromOutputCmd\n");
+  
   //if the current command was part of op redir
   //we need to take care of its file path
   //TODO THERE IS A PROBLEM WITH /dev/null or /dev/* devices
   //not returning their actual major and minor id
-  if(cmd->currOutputRedir){
+  if(cmd->currOutputRedir){    
     if(isFilePath(cmd->name)){
       FilePtr currDirFile = getFileStruct(cmd->name);
       //if there is no such file
       if(!currDirFile){
 	char* filePath = getRidOfEscapeChars(cmd->name);
 	char* dir = getFileDir(cmd->name);
-	//printf("Dir here is %s\n",dir);
 	FilePtr currFilePtr = getFileStruct(dir);
 	//if there is no such directory
 	if(!currFilePtr)	return 0;
 	//if the directory exists
 	else{
 	  //if the directory is in a local machine
-	  if(currFilePtr->host==0){	    
-	    CommandPtr newCmdPtr = createCommand(strdup(cmd->name),0);	    
+	  if(currFilePtr->host==0){
+	    CommandPtr newCmdPtr = createCommand(strdup(cmd->name),0);
 	    newCmdPtr->name = strdup(cmd->name);
 	    newCmdPtr->execHost = currFilePtr->host;
-	    //printf("After making the command name now is %s\n",newCmdPtr->name);	    
+	    printf("After making the command name now is %s\n",newCmdPtr->name);
 	    return newCmdPtr;
 	  }
-	  else{	  
+	  else{
 	    char* homeDir = getHomeDir(hostMap[currFilePtr->host]->mnt_fsname);
 	    int length = strlen(homeDir)+(strlen(filePath)-strlen(hostMap[currFilePtr->host]->mnt_dir))+1;
 	    char* text = malloc(sizeof(char)*(length+1));
@@ -125,7 +127,7 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	    sprintf(text,"%s%s",homeDir,filePath+1+strlen(hostMap[currFilePtr->host]->mnt_dir));
 	    CommandPtr newCmdPtr = createCommand(text,0);
 	    newCmdPtr->execHost = currFilePtr->host;
-	    //printf("After making the command name now is %s\n",newCmdPtr->name);
+	    printf("After making the command name now is %s\n",newCmdPtr->name);
 	    return newCmdPtr;
 	  }  
 	}
@@ -136,7 +138,7 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	if(currDirFile->host==0){
 	  CommandPtr newCmdPtr = createCommand(strdup(cmd->name),0);	
 	  newCmdPtr->execHost = currDirFile->host;
-	  //printf("After making the command name now is %s\n",newCmdPtr->name);
+	  printf("After making the command name now is %s\n",newCmdPtr->name);
 	  return newCmdPtr;
 	}
 	else{
@@ -149,7 +151,7 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
 	  //printf("The target dir is %s\n",text);
 	  CommandPtr newCmdPtr = createCommand(text,0);
 	  newCmdPtr->execHost = currDirFile->host;
-	  //printf("After making the command name now is %s\n",newCmdPtr->name);
+	  printf("After making the command name now is %s\n",newCmdPtr->name);
 	  return newCmdPtr;
 	}
       }
@@ -165,6 +167,7 @@ CommandPtr getRemoteCmdTextFromOutputCmd(CommandPtr cmd){
       return newCmdPtr;
     }
   }
+  return 0;
 }
 
 //this finction replaces the local mounted filepaths
@@ -368,12 +371,10 @@ FilePtr getTransferFileList(CommandPtr currCmdPtr, CommandPtr prevCmdPtr){
 RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recursive){  
   if(!currCmdPtr)
     return 0;
-  //RemoteCmdPtr remoteCmdHeadPtr;
-  //RemoteCmdPtr remoteCmdTailPtr;
   //if we don't have more than one command to combine
   if(!prevCmdPtr){
     //printf("Inside _makeRemoteCmd 1\n");
-    printf("_makeRemoteCmd1 for command %s\n",currCmdPtr->name);
+    //printf("_makeRemoteCmd1 for command %s\n",currCmdPtr->name);
 
     //if theres no need to combine commands then we need to generate the text part just for
     //this command and add it to the remoteCmdTailPtr or head Pointer  
@@ -386,9 +387,9 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
       CommandPtr newCmdPtr = getRemoteCmdTextFromOutputCmd(currCmdPtr);
       //printf("Post return from getRemoteCmdTextFromOutputCmd\n");
       if(!newCmdPtr){
-	freeRemoteCmdPtr(currRemoteCmdPtr);
+	//freeRemoteCmdPtr(currRemoteCmdPtr);
 	currRemoteCmdPtr = 0;
-	fprintf(stderr,"%s is not a diretory or file!\n",currCmdPtr->name);
+	//fprintf(stderr,"%s is not a diretory or file!\n",currCmdPtr->name);
 	return currRemoteCmdPtr;
       }
       else{
@@ -398,17 +399,14 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
 	//printf("getRemoteCmdTextFromOutputCmd: After processing the command name is %s\n",currRemoteCmdPtr->cmdText->text);
 	//we are only interested in the text part
 	//so once copied we free it
-	freeCommandPtr(newCmdPtr);
+	//freeCommandPtr(newCmdPtr);
       }
     }
     else
       currRemoteCmdPtr->cmdText = getRemoteCmdTextFromCmd(currCmdPtr)->cmdText;
-        
-    if(currRemoteCmdPtr){
+    if(currRemoteCmdPtr)
       //now get the list of files to be transferred for this group of command
-      currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,0);
-      //printf("Cmd text at !prevCmdPtr is %s of length %d\n",currRemoteCmdPtr->cmdText->text,currRemoteCmdPtr->cmdText->length);
-    }
+      currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,0);      
     return currRemoteCmdPtr;
   }
   //if we need to do a recursive call
@@ -445,7 +443,7 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
 	tempRemoteCmdTextPtr->cmdText->length = strlen(duplicate);
 	//we only need the text of the RemoteCmdPtr
 	//so we once we've copied the text we free it
-	freeRemoteCmdPtr(interRemoteCmdPtr);
+	//freeRemoteCmdPtr(interRemoteCmdPtr);
 	interRemoteCmdPtr=0;
 	//add the new tempRemoteCmdTextPtr to our list
 	if(tempRemoteCmdTextPtr){
@@ -476,7 +474,8 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
     currRemoteCmdPtr->transferFileList = getTransferFileList(currCmdPtr,prevCmdPtr);       
        
     return currRemoteCmdPtr;
-  }
+  }  
+  return 0;
 }
 
 void printTransferList(FilePtr head){
@@ -489,8 +488,7 @@ void printTransferList(FilePtr head){
 
 //print the command tree
 void printRemoteCmdTree(RemoteCmdPtr remoteCmdHeadPtr){
-  RemoteCmdPtr tempRemoteCmdPtr = remoteCmdHeadPtr;
-  //printf("--------------------------------------------------\n");
+  RemoteCmdPtr tempRemoteCmdPtr = remoteCmdHeadPtr;  
   while(tempRemoteCmdPtr){
     if(tempRemoteCmdPtr->currOutputRedir)
       printf(" > ");
@@ -498,15 +496,9 @@ void printRemoteCmdTree(RemoteCmdPtr remoteCmdHeadPtr){
     printf("\n");
     printTransferList(tempRemoteCmdPtr->transferFileList);
     if(tempRemoteCmdPtr->next && !(tempRemoteCmdPtr->next->currOutputRedir))
-      printf(" | ");
-    /*if(tempRemoteCmdPtr->next && (!(tempRemoteCmdPtr->inputRedir) && !(tempRemoteCmdPtr->outputRedir)))
       printf(" | ");    
-    else if(tempRemoteCmdPtr->outputRedir && tempRemoteCmdPtr->next)
-      printf(" > ");*/
     tempRemoteCmdPtr=tempRemoteCmdPtr->next;    
-  }
-  //printf("\n");
-  //printf("--------------------------------------------------\n");
+  }  
 }
 
 //the bootstrap function that calls _makeRemoteCmd
@@ -578,6 +570,7 @@ RemoteCmdPtr makeRemoteCmd(CommandPtr cmdHeadPtr){
 //this function frees the RemoteCmdPtr and all of 
 //its fields
 void freeRemoteCmdPtr(RemoteCmdPtr remoteCmdPtr){
+  printf("Inside freeRemoteCmdPtr\n");
   freeString(remoteCmdPtr->cmdText);
   FilePtr currFilePtr = remoteCmdPtr->transferFileList;
   while(currFilePtr){

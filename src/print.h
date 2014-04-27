@@ -25,7 +25,7 @@ void printForLoop(ForLoopPtr currForLoop);
 void printPipeline(PipelineListPtr pipeline);
 
 //print the command
-int printCommand(CommandPtr cmd);
+void printCommand(CommandPtr cmd);
 
 //print the argument
 void printArg(ArgPtr argPtr);

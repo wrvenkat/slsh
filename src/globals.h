@@ -36,9 +36,9 @@ typedef struct stringstruct{
   char* text;
   int length;
   struct stringstruct* next;
-}STRING;
+}STRINGSTRUCT;
 
-typedef STRING* StringPtr;
+typedef STRINGSTRUCT* StringPtr;
 
 //creates a string
 StringPtr createString();

@@ -35,7 +35,7 @@ char* getRidOfEscapeChars(char* filePath){
   sprintf(finalStr,"%s",filePath);
   char* strPtr = filePath;
   char* strCopyPtr = finalStr;
-  char* startPtr = filePath;
+  //char* startPtr = filePath;
   int i=0;
   for(i=0;i<strlen(filePath);){    
     if(strPtr[i]=='\\'){      
@@ -100,7 +100,7 @@ FilePtr getFileStruct(char* fileStr){
     newFile->size=(int)newStat->st_size;
     newFile->actualPath=actualPath;
     newFile->origPath=strdup(fileStr);
-    if(DEBUG2)
+    //if(DEBUG2)
       printf("Size: %d bytes Host: %d ActPath: %s origPath: %s MinId: %d and MajId: %d\n",newFile->size,
 	     newFile->host,newFile->actualPath,newFile->origPath,newFile->minId,majId);
     return newFile;
@@ -143,17 +143,19 @@ void createHostMap(){
     hostMap[0]->mnt_dir=tempCurrWD;
     hostMap[0]->mnt_fsname=strdup(tempCurrWD);
     int i=1;
-    while(mntEnt = getmntent(fp)){
+    while((mntEnt = getmntent(fp))){
       if(!strcmp(mntEnt->mnt_type,"fuse.sshfs")){
 	struct stat statStruct;
-	stat(mntEnt->mnt_dir, &statStruct);	
-	dev_t m1=statStruct.st_dev;
-	int minId=minor(m1);
-	hostMap[i]=malloc(sizeof(HOSTINFO));
-	hostMap[i]->minId=minId;
-	hostMap[i]->mnt_dir=strdup(mntEnt->mnt_dir);
-	hostMap[i]->mnt_fsname=strdup(mntEnt->mnt_fsname);
-	i++;
+	if(!stat(mntEnt->mnt_dir, &statStruct)){
+	  dev_t m1=statStruct.st_dev;
+	  int minId=minor(m1);
+	  hostMap[i]=malloc(sizeof(HOSTINFO));
+	  memset(hostMap[i],0,sizeof(HOSTINFO));
+	  hostMap[i]->minId=minId;	  
+	  hostMap[i]->mnt_dir=strdup(mntEnt->mnt_dir);
+	  hostMap[i]->mnt_fsname=strdup(mntEnt->mnt_fsname);	  
+	  i++;
+	}	
       }
     }
     maxHost=i;
@@ -162,13 +164,10 @@ void createHostMap(){
 }
 
 //returns true if a string is a valid file path or not
-int isFilePath(char* fakeFile){
+int isFilePath(char* fakeFile){  
   regmatch_t matchedArray[6];
-  if(regexec(&fileReg,fakeFile,(size_t)0,matchedArray,0)==REG_NOMATCH){
-    if(DEBUG1)
-     //printf("%s is not a filepath\n",fakeFile);
-    return 0;
-  }
+  if(regexec(&fileReg,fakeFile,(size_t)0,matchedArray,0)==REG_NOMATCH)    
+    return 0;  
   return 1;
 }
 
@@ -187,15 +186,11 @@ void compRegex(){
 //fs_name
 char* getHomeDir(char* fsName){
   if(!fsName) return 0;  
-  int len = strlen(fsName);
-  int i=0;
-  while(i<len){
-    if(fsName[i]!='/')
-      i++;
-    else
-      break;
-  }  
-  return strdup(&fsName[i]);
+  char* homeDirStart = 0;  
+  homeDirStart = strchr(fsName,'/');
+  if(homeDirStart)
+     return homeDirStart;  
+  return 0;
 }
 
 //returns the filename given the filePath
@@ -228,16 +223,15 @@ StringPtr getSSHString(int host){
   char* tempString = strdup(hostInfo->mnt_fsname);
   int i=0;
   while(i<strlen(tempString) && tempString[i]!=':')
-    i++;
-  i++;
+    ++i;  
   //printf("The value of i is %d and char is %c\n",i,tempString[i]);
   char* connString = malloc(sizeof(char)*(i+1));
-  memset(connString,0,i);
-  snprintf(connString,i,"%s",tempString);
-  //printf("The ssh string is %s\n",connString);
+  memset(connString,0,i+1);
+  snprintf(connString,i+1,"%s",tempString);
+  //printf("connsString is %s and its length is %d with i-1 as %d\n",connString,strlen(connString),i-1);
   free(tempString);
-  StringPtr sshString = createString();
-  sshString->text = connString;
-  sshString->length = i;
+  StringPtr sshString = createString();  
+  sshString->text = connString;  
+  sshString->length = i;  
   return sshString;
 }

@@ -2,35 +2,9 @@
 #include "for_loop.h"
 #include "structure.h"
 
-//print the file
-void printFile(FilePtr filePtr);
-
-//print the argument
-void printArg(ArgPtr argPtr);
-
-//print the command
-int printCommand(CommandPtr cmd){
-  int retVal=1;
-  if(cmd->currOutputRedir){
-    printf("> %s ",cmd->name);
-    retVal=0;
-  }
-  else if(cmd->next)
-    printf("%s ",cmd->name);  
-  ArgPtr tempArgPtr = cmd->headArgs;
-  //printf("Printing Args\n");
-  while(tempArgPtr){
-    printArg(tempArgPtr);
-    tempArgPtr=tempArgPtr->next;
-  }
-  if(retVal)
-    printf("| ");
-  return retVal;
-}
-
 //print the entire prse tree
 void printTree(){
-  InputUnitPtr inputUnit = headPtr;
+  //InputUnitPtr inputUnit = headPtr;
   printf("-----------Begin printTree----------------------------------\n");
   if(headPtr->type==FORLOOPT)
     printForLoop((ForLoopPtr)(headPtr->inputUnit));
@@ -64,15 +38,29 @@ void printPipeline(PipelineListPtr pipeline){
   }  
 }
 
-//print the hostMap[] array
-void printHostMap(){
-  int i=0;
-  for(i=0;i<maxHost;i++){
-    printf("%d %s %s %d\n",i,hostMap[i]->mnt_dir,hostMap[i]->mnt_fsname,hostMap[i]->minId);
+//print the command
+void printCommand(CommandPtr cmd){  
+  printf("%s ",cmd->name);
+  ArgPtr tempArgPtr = cmd->headArgs;  
+  while(tempArgPtr){
+    printArg(tempArgPtr);
+    tempArgPtr=tempArgPtr->next;
   }
+  if(cmd->next &&  !(cmd->next->currOutputRedir))
+    printf("| ");
+  else if(cmd->next &&  cmd->next->currOutputRedir)
+    printf("> ");  
 }
 
 //print the argument
 void printArg(ArgPtr argPtr){
   printf("%s ",argPtr->text);
+}
+
+//print the hostMap[] array
+void printHostMap(){
+  int i=0;
+  for(i=0;i<maxHost;i++){
+    printf("%d MntDir:%s MntFsName:%s MinId:%d\n",i,hostMap[i]->mnt_dir,hostMap[i]->mnt_fsname,hostMap[i]->minId);
+  }
 }

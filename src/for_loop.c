@@ -39,8 +39,7 @@ glob_t* getFileList(char* expr){
   memset(newExpr,0,len+1);
   //printf("Char at expr+1 is %c and char at expr+1+len is %c\n",*(expr+1),*(expr+1+len));
   snprintf(newExpr,len+1,"%s",expr+1);
-  printf("New expression is %s\n",newExpr);
-  size_t cnt, length;
+  printf("New expression is %s\n",newExpr);  
   glob_t* glob_results = malloc(sizeof(glob_t));
   //get the glob results for the current directory
   int retValue = glob(newExpr, GLOB_NOCHECK, 0, glob_results);

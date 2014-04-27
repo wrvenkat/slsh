@@ -11,6 +11,7 @@
 //this function makes the persistent SSH connections and also exits them once
 //all the commands are executed
 int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
+  printf("Inside makePersistentSSH\n");
   char** persistPath = 0;
   //allocate size for three char arrays
   persistPath = malloc(sizeof(char*)*(maxHost+1));
@@ -31,12 +32,13 @@ int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
     char cmd[length1+1+strlen("'exit'")];
     sprintf(cmd,"ssh %s %s %s%f 'exit'",sshString->text,PERSIST_SSH,P_PATH_STR,f);
     //printf("The ssh persist path is %s\n",persistPath[i]);
-    //if(DEBUG2)	printf("The ssh persist string is %s\n",cmd);
+    //if(DEBUG2)	
+    printf("The ssh persist string is %s\n",cmd);
     pid_t status = system(cmd);
     retValue = WEXITSTATUS(status);
   }
   //here is where we start the execution
-  retValue = executeCommand(remoteCmdHeadPtr,0,-2);
+  //retValue = executeCommand(remoteCmdHeadPtr,0,-2);
   //sleep(5);
   for(i=1;i<maxHost;i++){
     StringPtr sshString = getSSHString(i);
@@ -82,7 +84,7 @@ int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){
   int execHost = remoteCmdPtr->host;
   //for now if the execHost is -1, we set it to be 0, the host machine
   if(execHost<0) execHost=0;
-  StringPtr cmdText = remoteCmdPtr->cmdText;
+  //StringPtr cmdText = remoteCmdPtr->cmdText;
   FilePtr transferList = remoteCmdPtr->transferFileList;
     
   //first we always start witht he set of files to be transferred
@@ -217,7 +219,7 @@ int transferInputFile(char* fileName, int prevHost, int currHost){
   }
   else
     length2 = strlen(currHomeDir)+length3+2;
-  int nullRLen = strlen(REDIR_NULL)+1;
+  //int nullRLen = strlen(REDIR_NULL)+1;
   char cmd1[length1+1];
   char cmd2[length2+1];
   char command[length1+length2+strlen("scp ")+1/*+nullRLen*/+1];  
@@ -395,30 +397,32 @@ StringPtr prepareCommand(RemoteCmdPtr cmd, char* ipFile, char* opFile, int execH
 
 //make temporary directories
 void makeTempDir(){
-  char* mkDirCmd = 0;
   int length = 0;
   int i=0;
   StringPtr sshString = 0;
-  //if(DEBUG2)	printf("--------------------------------------------------------------------\n");
+  
   for(i=0;i<maxHost;i++){
     char* homeDir = getHomeDir(hostMap[i]->mnt_fsname);
     if(i==0){
-      length = strlen("mkdir ")+strlen(homeDir)+strlen(TEMP_DIR)+1+strlen(REDIR_NULL)+2;
-      mkDirCmd = malloc(sizeof(char)*(length+1));
+      length = strlen("mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL);
+      char mkDirCmd[length+1];
+      memset(mkDirCmd,0,length+1);      
       sprintf(mkDirCmd,"mkdir \"%s%s\" %s",homeDir,TEMP_DIR,REDIR_NULL);
+      //printf("1 The mkDirCmd is %s\n",mkDirCmd);
+      //printf("1 Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
+      //system(mkDirCmd);
     }
     else{
-      sshString = getSSHString(i);
-      length = strlen("ssh ")+sshString->length+strlen(" 'mkdir ")+strlen(homeDir)+strlen(TEMP_DIR)+1+strlen(REDIR_NULL)+2;
-      mkDirCmd = malloc(sizeof(char)*(length+1));
+      sshString = getSSHString(i);     
+      length = strlen("ssh ")+sshString->length+strlen(" 'mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL)+1;
+      //mkDirCmd = malloc(sizeof(char)*(length+1));
+      char mkDirCmd[length+1];
+      memset(mkDirCmd,0,length+1);
       sprintf(mkDirCmd,"ssh %s 'mkdir \"%s%s\" %s'",sshString->text,homeDir,TEMP_DIR, REDIR_NULL);
-    } 
-    //if(DEBUG2)
-    printf("The mkDirCmd is %s\n",mkDirCmd);
-    pid_t status = system(mkDirCmd);
-    free(homeDir);
-    //free(mkDirCmd);
-    freeString(sshString);
-  }
-  //if(DEBUG2)	printf("--------------------------------------------------------------------\n");
+      //printf("The mkDirCmd is %s\n",mkDirCmd);
+      //printf("Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
+      //system(mkDirCmd);
+    }    
+    freeString(sshString);    
+  }  
 }
