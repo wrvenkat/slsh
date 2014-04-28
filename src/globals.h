@@ -14,7 +14,7 @@
 #define DBG_FUNC_ENTRY 0
 //turns on or off all of the debug messages in makePlan1()
 //NOTE if turning on DBG_PLAN do turn on DBG_FILE
-//so the you see what is the details of each file is
+//so the you see what the details of each file are
 #define DBG_PLAN 0
 //enable debug messages for getFileStruct function
 #define DBG_FILE 0
