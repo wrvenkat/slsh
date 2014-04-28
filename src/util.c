@@ -11,6 +11,7 @@
 #include "globals.h"
 #include "enums.h"
 #include "structure.h"
+#include <ctype.h>
 
 //intialize global variables and flags
 int initGlobals(){
@@ -21,9 +22,11 @@ int initGlobals(){
   maxHost=0;
   currWD = (char*)malloc(sizeof(char)*MAX_DIR_LENGTH);
   getcwd(currWD,MAX_DIR_LENGTH);
-  createHostMap();
+  createHostMap();  
   if(maxHost<=1)
     return -1;
+  memset(cmdStats,0,MAX_CMDS);
+  loadCmdStats("cmdstats.txt");
   compRegex();
   return 0;
 }
@@ -237,4 +240,109 @@ StringPtr getSSHString(int host){
   sshString->text = connString;  
   sshString->length = i;  
   return sshString;
+}
+
+// Insert an element with a specified type in a particular line number
+// initialize the scope depth of the entry from the global var scopeDepth
+CmdStatPtr cmdStatInsert(char *name, double cost, int type){
+  int hashValue=computeHashValue(name);
+  if(hashValue<0)	return 0;
+  
+  //create a cmdStat
+  CmdStatPtr newCmdStat = createCommandStat();
+  newCmdStat->cmdName = name;
+  newCmdStat->costConstant=cost;
+  newCmdStat->type=(CostType)type;
+  
+  //insert the new entry at the head of the list for that hashValue
+  newCmdStat->next=cmdStats[hashValue];
+  cmdStats[hashValue]=newCmdStat;  
+  return newCmdStat;
+}
+
+//looks up cmdStat
+CmdStatPtr cmdStatLookup(char *name){
+  int hashValue=computeHashValue(name);
+  if(hashValue<0)	return 0;
+  CmdStatPtr currCmdStat=cmdStats[hashValue];
+  //find the exact cmd
+  while(currCmdStat!=NULL){
+    if(!strcmp(name,currCmdStat->cmdName))
+      return currCmdStat;
+    currCmdStat=currCmdStat->next;
+  }
+  return 0;
+}
+
+//function that returns the hashValue of a given identifier
+int computeHashValue(char * identifier){
+  char * charPtr=identifier;
+  if(charPtr==NULL){
+    printf("Error: Empty string to hashn\n");
+    return -1;
+  }
+  int asciiSum=0;
+  while(*charPtr!=0)	asciiSum+=(int)*charPtr++;
+  return asciiSum%MAX_CMDS;
+}
+
+//strips leading and trailing spaces
+//does modify the original string
+char* strstrip(char* s1){
+    if(!s1) return 0;
+    char* s2 = strdup(s1);
+    size_t size;
+    char *end;
+    size = strlen(s2);
+    if (!size)
+      return s2;
+    end = s2 + size - 1;
+    while (end >= s2 && isspace(*end))
+      end--;
+    
+    *(end + 1) = '\0';
+    while (*s2 && isspace(*s2))
+      s2++;
+    return s2;
+}
+
+//loads the command stats from cmdStatsFileName onto cmdStats array
+void loadCmdStats(char* cmdStatsFileName){
+  char *line1 = 0;
+  size_t len = 0;
+  FILE *filePtr = fopen(cmdStatsFileName,"r");
+  char buf[10];
+  char *bufp = buf;
+  while(getline(&line1, &len, filePtr)!=-1){
+    if(line1){
+      char* line2 = strstrip(line1);
+      char* cmdName=0;
+      double cost=0;
+      int type=0;
+      if(line2[0]!='#'){
+	int j = 0;
+	while(line2){  
+	  bufp = strsep(&line2,",");
+	  if(j==0){
+	    cmdName = strdup(bufp);
+	    //if(DBG_GEN)
+	      //printf("The cmdName is %s\n",cmdName);
+	  }
+	  else if(j==1){
+	    cost=atof(bufp);
+	    //if(DBG_GEN)
+	      //printf("The cost is %f\n",cost);
+	  }
+	  else if(j==2){
+	    type=atoi(bufp);
+	    //if(DBG_GEN)
+	      //printf("The type is %d\n",type);
+	  }
+	  //insert it into the array
+	  cmdStatInsert(cmdName,cost,type);
+	  j++;
+	}
+      }
+    }
+  }
 }

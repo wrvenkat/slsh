@@ -92,15 +92,18 @@ FilePtr makeArgPlan1(ArgPtr currArg){
 //this function sets the host on which this command 
 //is to be executed based on the largest file size
 //present in its arg list
-void makeCmdPlan1(CommandPtr cmd){
-  if(!cmd)	return;
+Plan1StructPtr makeCmdPlan1(CommandPtr cmd, double ipCost,int prevExecHost){
+  if(!cmd)	return 0;
   if(DBG_PLAN)
     printf("makeCmdPlan1 for the command %s\n",cmd->name);
   ArgPtr tempArgPtr = cmd->headArgs;
+  u_int32_t totalFileCost=0;
+  double transferCost=0;
+  double outputCost=0;
   if(!tempArgPtr && cmd->currOutputRedir)
     tempArgPtr = createArg(strdup(cmd->name),WORDT);
   else if(!tempArgPtr)
-    return;
+    return 0;
   
   //this array holds the total file sizes
   //for hosts corresponding to the files
@@ -115,6 +118,8 @@ void makeCmdPlan1(CommandPtr cmd){
     FilePtr currFile = makeArgPlan1(tempArgPtr);      
     if(currFile){
       hostFileSize[currFile->host]+=currFile->size;
+      //also calculate the totalFileCost
+      totalFileCost+=currFile->size;
       tempArgPtr->filePtr=currFile;      
     }
     else
@@ -125,21 +130,61 @@ void makeCmdPlan1(CommandPtr cmd){
   i=1;
   targetHost=0;
   
+  //get the targetHost based on the max bytes to be transferred
   while(i<maxHost){
     if(hostFileSize[targetHost]<hostFileSize[i])
       targetHost=i;
     i++;
   }
+  //get the trargetHost
+  transferCost = hostFileSize[targetHost];
   
-  if(targetHost!=-1){
-    //set the host where this command needs to be executed
-    cmd->execHost=targetHost;
-    if(DBG_PLAN)
-      printf("The target execution host for %s command is %d\n",cmd->name, targetHost);
+  //calculate the targethost
+  //if the ipCost is not -ve then we need to include that in the
+  //target host calculation
+  if(ipCost>=0 && !(cmd->currOutputRedir)){
+    if(ipCost>hostFileSize[targetHost])
+      targetHost=prevExecHost;
+    //else the targetHost remains the same
   }
+  //else
+  /*//means no preference of host to be executed
+    cmd->execHost=-1;*/
+  
+  //set the host where this command needs to be executed
+  cmd->execHost=targetHost;
+   
+  //get the cmdStat for this command
+  CmdStatPtr cmdStat = cmdStatLookup(cmd->name);  
+  //calculate the outputCost
+  if(cmdStat){
+    if(cmdStat->type==IPCOST){
+      if(ipCost>=0)
+	outputCost = ipCost*(cmdStat->costConstant);
+    }
+    else if(cmdStat->type==ARGCOST)
+      outputCost = totalFileCost*(cmdStat->costConstant);
+    else if(cmdStat->type==BOTHCOST)
+      outputCost = (totalFileCost+ipCost)*(cmdStat->costConstant);    
+  }
+  //if we don't get the cmdStat for the command, we set it to 0
   else
-    //means no preference of host to be executed
-    cmd->execHost=-1;
+    outputCost = 0;
+  
+  if(DBG_GEN)
+    printf("makeCmdPlan1: The ipCost:%f transferCost:%f outputCost:%f\n",ipCost,transferCost,outputCost);
+    
+  if(DBG_PLAN){
+    printf("The target execution host for %s command is %d\n",cmd->name, targetHost);
+    printf("----------------------\n");
+  }
+  
+  Plan1StructPtr plan1StructPtr = malloc(sizeof(PLAN1STRUCT));
+  memset(plan1StructPtr,0,sizeof(PLAN1STRUCT));
+  plan1StructPtr->opCost = outputCost;
+  plan1StructPtr->execHost=targetHost;
+  //we return the plan1StructPtr
+  return plan1StructPtr;
 }
 
 //the bootstrap function to make the plan starting with each command
@@ -151,8 +196,25 @@ void makePlan1(CommandPtr cmdHeadPtr){
   if(!cmdHeadPtr)
     return;  
   CommandPtr tempCmdPtr = cmdHeadPtr;
+  Plan1StructPtr prevPlan1=0;
+  int i=0;
   while(tempCmdPtr){
-    makeCmdPlan1(tempCmdPtr);    
+    //first time
+    if(i==0){
+      prevPlan1 = makeCmdPlan1(tempCmdPtr,-1,-1);
+      i++;
+    }
+    //otherwise
+    else{
+      if(prevPlan1){
+	double opCost = prevPlan1->opCost;
+	int prevExecHost = prevPlan1->execHost;
+	free(prevPlan1);
+	prevPlan1 = makeCmdPlan1(tempCmdPtr,opCost,prevExecHost);
+      }
+      else
+	prevPlan1 = makeCmdPlan1(tempCmdPtr,0,0);
+    }
     tempCmdPtr=tempCmdPtr->next;
   }
   if(DBG_PLAN)

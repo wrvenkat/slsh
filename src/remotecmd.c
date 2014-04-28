@@ -41,8 +41,11 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
     return 0;
   }
   //get the home directory on the remote machine where the file is present
-  int fileHostId = arg->filePtr->host;
+  int fileHostId = arg->filePtr->host;  
   char* homeDir = getHomeDir(hostMap[fileHostId]->mnt_fsname);
+  //if the execution host is 0=> locally
+  if(execHost==0)
+    homeDir = getHomeDir(hostMap[execHost]->mnt_fsname);    
   char* mountDir = hostMap[fileHostId]->mnt_dir;
   //look here!
   char* fileName = getFileName(arg->filePtr->actualPath);
@@ -77,7 +80,7 @@ StringPtr getFilePath(ArgPtr arg, int execHost){
       filePath->length=length;      
     }
   }
-  else{
+  else{      
     length=strlen(homeDir)+strlen(fileName)+strlen(TEMP_DIR);
     length+=3;
     filePathStr = malloc(sizeof(char)*(length));
@@ -397,7 +400,7 @@ RemoteCmdPtr _makeRemoteCmd(CommandPtr currCmdPtr,CommandPtr prevCmdPtr,int recu
       if(!newCmdPtr){
 	//freeRemoteCmdPtr(currRemoteCmdPtr);
 	currRemoteCmdPtr = 0;
-	//fprintf(stderr,"%s is not a diretory or file!\n",currCmdPtr->name);
+	fprintf(stderr,"%s is not a diretory or file!\n",currCmdPtr->name);
 	return currRemoteCmdPtr;
       }
       else{

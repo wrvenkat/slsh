@@ -80,6 +80,18 @@ HostInfoPtr hostMap[MAX_HOST];
 int maxHost;
 char* currWD;
 
+typedef struct cmdstat{
+  char* cmdName;
+  double costConstant;
+  CostType type;
+  struct cmdstat* next;
+}CMDSTAT;
+
+typedef CMDSTAT* CmdStatPtr;
+
+//the global cmdstats array
+CmdStatPtr cmdStats[MAX_CMDS];
+
 //the all contained head pointer
 InputUnitPtr headPtr;
 
@@ -89,15 +101,6 @@ InputUnitPtr headPtr;
 /* creates a new command*/
 CommandPtr createCommand(char* cmdName, ArgPtr argsList);
 
-/* inserts a Command into the command list*/
-void insertCommand(CommandPtr commandPtr);
-
-/*creates a new FILELIST*/
-FilePtr createFile(char* path, int host);
-
-/*insert at the end of the args list of the command*/
-void insertFile(FilePtr filePtr,CommandPtr command);
-
 /*create a new arg*/
 ArgPtr createArg(char* text, ArgType type);
 
@@ -106,6 +109,18 @@ InputUnitPtr createInputUnit(InputUnitType type);
 
 //create PipelineListPtr
 PipelineListPtr createPipelineList();
+
+/*creates a new FILELIST*/
+FilePtr createFile(char* path, int host);
+
+//create a commandStat
+CmdStatPtr createCommandStat();
+
+/*insert at the end of the args list of the command*/
+void insertFile(FilePtr filePtr,CommandPtr command);
+
+/* inserts a Command into the command list*/
+void insertCommand(CommandPtr commandPtr);
 
 /*insert at the end of the args list of command*/
 void insertArg(ArgPtr arg, CommandPtr command);
@@ -130,6 +145,12 @@ void freePipelineList(PipelineListPtr currPipeline);
 
 //frees all the commands in the current pipeline
 void freePipeline(CommandPtr headCmdPtr);
+
+//frees the cmdStats array
+void freeCmdStats();
+
+//frees the cmdStat
+void freeCmdStat(CmdStatPtr cmdStat);
 
 //the bootstrap function that starts the processing of the whole parse tree
 void startProcessing();

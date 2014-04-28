@@ -12,6 +12,9 @@ regex_t fileReg;
 typedef struct file FILE_;
 typedef FILE_* FilePtr;
 
+typedef struct cmdstat CMDSTAT;
+typedef CMDSTAT* CmdStatPtr;
+
 //intialize global variables and flags
 int initGlobals();
 
@@ -42,8 +45,23 @@ char* getFileDir(char* filePath);
 // in the filePath and returns a string which doesn't contain those
 char* getRidOfEscapeChars(char* filePath);
 
+//strips leading and trailing spaces
+char *strstrip(char *s);
+
+//function that returns the hashValue of a given identifier
+int computeHashValue(char * identifier);
+
+//insert cmdStat in the cmdStats
+CmdStatPtr cmdStatInsert(char *name, double cost, int type);
+
+//looks up cmdStat
+CmdStatPtr cmdStatLookup(char *name);
+
 //this function returns the user@hostname for the ssh
 //conneciton
 StringPtr getSSHString(int host);
+
+//loads the command stats from cmdStatsFileName onto cmdStats array
+void loadCmdStats(char* cmdStatsFileName);
 
 #endif

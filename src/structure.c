@@ -51,6 +51,14 @@ PipelineListPtr createPipelineList(){
   return pipelineListPtr;
 }
 
+//create a commandStat
+CmdStatPtr createCommandStat(){
+  CmdStatPtr cmdStat = malloc(sizeof(CMDSTAT));
+  memset(cmdStat,0,sizeof(CMDSTAT));
+  cmdStat->next=0;
+  return cmdStat;
+}
+
 //the bootstrap function that starts the processing of the whole parse tree
 void startProcessing(){
   if(DBG_HOSTMAP_PRINT)
@@ -168,4 +176,21 @@ void freeFilePtr(FilePtr currFile){
   free(currFile->origPath);
   free(currFile->remotePath);
   free(currFile);
+}
+
+//frees the cmdStats array
+void freeCmdStats(){
+  int i=0;
+  for(i=0;i<MAX_CMDS;i++){
+    freeCmdStat(cmdStats[i]);
+  }
+}
+
+//frees the cmdStat
+void freeCmdStat(CmdStatPtr cmdStat){
+  if(!cmdStat)	return;
+  if(DBG_FREE)
+    printf("Inside freeCmdStat\n");
+  free(cmdStat->cmdName);
+  free(cmdStat);
 }
