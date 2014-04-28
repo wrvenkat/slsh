@@ -1,0 +1,5 @@
+#command,cost={-1=irrelevant,0.1,0.5 and 1},cost for type {0=input for command,1=input from command's file arguments,2=both}
+cat,1,2
+grep,0.5,0
+sort,0.5,0
+wc,0.1,0
