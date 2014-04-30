@@ -128,7 +128,7 @@ void printToken(int token, char *str){
 
 int gettok(void){
     int currentToken;    
-    currentToken=yylex();    
+    currentToken=yylex();
     if (currentToken == 0) { // means EOF}
             return 0;
     }

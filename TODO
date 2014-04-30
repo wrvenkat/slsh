@@ -5,6 +5,9 @@ Major
 -----
 1. Support for sshing into only those hosts that are in the pipeline.
 2. Support for pipes, using fork() and execve() instead of system()
+3. See if doing 2. causes bytes to be transferred via the local host. If so, see if it can done
+in a way without using temporary files - this is assuming that all the hosts have authorization to each other.
+4. Make a proper assumption of the network model for this. Assume utmost portability? or a subset of that?
 
 Minor
 -----
