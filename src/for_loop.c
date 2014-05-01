@@ -4,14 +4,15 @@
 #include <glob.h>
 #include "enums.h"
 #include "structure.h"
+#include "print.h"
 
 //creates a new for loop
 ForLoopPtr createForLoop(char* varName, char* expr){
   ForLoopPtr newForLoop = malloc(sizeof(FORLOOP));
   newForLoop->varName = varName;
   newForLoop->expr = expr;
-  newForLoop->newPipeline=0;
-  newForLoop->pipeline=0;
+  newForLoop->newPipelineList=0;
+  newForLoop->pipelineList=0;
   newForLoop->next=0;
   return newForLoop;
 }
@@ -21,8 +22,8 @@ void freeForLoop(ForLoopPtr forLoop){
   if(!forLoop)	return;
   if(DBG_FREE)
     printf("Inside freeForLoop\n");
-  freePipelineList(forLoop->pipeline);
-  freePipelineList(forLoop->newPipeline);
+  freePipelineList(forLoop->pipelineList);
+  freePipelineList(forLoop->newPipelineList);
   free(forLoop->expr);
   free(forLoop->varName);
   free(forLoop);
@@ -80,7 +81,7 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
   //syntax/parse tree for each of the pipeline in the pipeline
   //list and replace any references with the full file path
   char* filePath = 0;
-  int length = 0;
+  //int length = 0;
   ForLoopPtr currForLoop = loopHeadPtr;
   //for each of the for loop
   //for now there is only on for loop
@@ -92,14 +93,15 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
   sprintf(reference,"$%s",varName);
   if(DBG_GEN)
     printf("manageReferencesInLoop: The reference is %s\n",reference);
-  while(i<count){
-    PipelineListPtr newPipeline = 0;      
-    PipelineListPtr currPipeline = currForLoop->pipeline;
-    length = strlen(currWD)+strlen(fileList[i]);
+  while(i<count){  
+    PipelineListPtr newPipeline = 0;
+    PipelineListPtr currPipeline = currForLoop->pipelineList;
+    /*length = strlen(currWD)+strlen(fileList[i]);
     filePath = malloc(sizeof(char)*(length+1+1));
     memset(filePath,0,length+1+1);
-    sprintf(filePath,"%s/%s",currWD,fileList[i]);      
-    //printf("The actual filepath is %s and the reference is %s\n",filePath,reference);
+    sprintf(filePath,"%s/%s",currWD,fileList[i]);
+    //if(DBG_GEN)
+      printf("The the replaced reference is %s\n",filePath);*/
     //for each of the pipeline get a new copy for each occurence of the glob
     //and have the reference replaced and add that reference list to the for loop
     while(currPipeline){
@@ -117,8 +119,10 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
     free(filePath);      
     i++;
   }
-  currForLoop->newPipeline = newPipelineHead;
-  free(reference);  
+  currForLoop->newPipelineList = newPipelineHead;
+  //print and see the new duplicated AST
+  //printForLoop(currForLoop,1);
+  free(reference);
   return 1;
 }
 
@@ -126,7 +130,7 @@ int manageReferencesInLoop(char* varName, int count, char** fileList,ForLoopPtr 
 //with their references replaced
 PipelineListPtr manageReferencesInPipeline(PipelineListPtr pipeline,char* reference, char* filePath){
   if(DBG_FUNC_ENTRY)
-    printf("Inside manageReferencesInPipeline\n");
+    printf("Inside manageReferencesInPipeline\n");  
   CommandPtr currCmdPtr = pipeline->headCommand;
   CommandPtr cmdPtrListHead=0;
   CommandPtr cmdPtrListTail=0;
@@ -149,7 +153,7 @@ PipelineListPtr manageReferencesInPipeline(PipelineListPtr pipeline,char* refere
   PipelineListPtr newPipeline = createPipelineList();
   newPipeline->headCommand=cmdPtrListHead;
   //print the pipeline and see  
-  //printPipeline(newPipeline);  
+  //printPipeline(newPipeline);printf("\n");
   return newPipeline;
 }
 
@@ -208,7 +212,20 @@ ArgPtr manageReferencesInArg(ArgPtr currArg,char* reference,char* filePath){
   //been used or populated yet
   if(DBG_GEN)
     printf("manageReferencesInArg: Pre-replacement text is:%s\n",newArg->text);
-  char* replacedText = replaceOccurence(newArg->text,strlen(newArg->text), reference,filePath);
+  char* tempStr1 = replaceOccurence(newArg->text,strlen(newArg->text), reference,filePath);
+  char* replacedText  = 0;
+  //now if this replaced text is a path
+  //we put them under ""
+  /*if(isFilePath(tempStr1)){
+    char* tempStr2 = getRidOfEscapeChars(tempStr1);
+    replacedText = malloc(sizeof(char)*(strlen(tempStr2)+3));
+    memset(replacedText,0,strlen(tempStr2)+3);
+    sprintf(replacedText,"\"%s\"",tempStr2);
+    free(tempStr1);
+    free(tempStr2);
+  }
+  else*/
+    replacedText = tempStr1;
   if(replacedText){
     free(newArg->text);
     newArg->text = replacedText;

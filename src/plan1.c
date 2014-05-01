@@ -47,6 +47,14 @@ FilePtr processWord1(ArgPtr wordArg){
   if(DBG_GEN)
     printf("processWord1: The newFilePath is %s\n",newFilePath);  
   tempFilePtr = getFileStruct(newFilePath);
+  //if we did get a positive pointer, then we need to make sure that they are enclosed in ""
+  if(tempFilePtr){
+    char* str = malloc(sizeof(char)*(strlen(tempFilePtr->actualPath)+3));
+    memset(str,0,strlen(tempFilePtr->actualPath)+3);
+    sprintf(str,"\"%s\"",tempFilePtr->actualPath);
+    free(tempFilePtr->actualPath);
+    tempFilePtr->actualPath = str;
+  }
   free(newFilePath);
   return tempFilePtr;
 }
@@ -153,6 +161,8 @@ Plan1StructPtr makeCmdPlan1(CommandPtr cmd, double ipCost,int prevExecHost){
   
   //set the host where this command needs to be executed
   cmd->execHost=targetHost;
+  //set this host to be involved
+  hostInvolved[targetHost]=1;
    
   //get the cmdStat for this command
   CmdStatPtr cmdStat = cmdStatLookup(cmd->name);  

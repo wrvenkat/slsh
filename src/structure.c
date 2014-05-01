@@ -6,6 +6,7 @@
 #include "print.h"
 #include "for_loop.h"
 #include "remotecmd.h"
+#include "util.h"
 
 /* creates a new command*/
 CommandPtr createCommand(char* cmdName, ArgPtr argsList){
@@ -70,40 +71,51 @@ void startProcessing(){
   if(ipUnitPtr->type==FORLOOPT){
     ForLoopPtr currForLoop = (ForLoopPtr)(headPtr->inputUnit);
     //fix any references in the forloop    
-    manageReferences(currForLoop);    
+    manageReferences(currForLoop);
     //now process the for loop
     processForLoop(currForLoop);
+    //now that all the pipelines are executed, 
+    //mark all hosts as not involved and
+    //exit the persistent connection
+    initHostInvolved();
+    exitPersistentSSH();
     freeForLoop(currForLoop);
   }
   else if(ipUnitPtr->type==PIPELINELST){
     processPipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
+    //mark all hosts as not involved and
+    //exit the persistent connection
+    initHostInvolved();
+    exitPersistentSSH();
     freePipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
   }
 }
 
 //function used by startProcessing
-void processForLoop(ForLoopPtr forLoop){
-  PipelineListPtr currPipeline = forLoop->newPipeline;  
-  processPipelineList(currPipeline);  
+void processForLoop(ForLoopPtr forLoop){  
+  processPipelineList(forLoop->newPipelineList);
 }
 
 //function used by startProcessing
-void processPipelineList(PipelineListPtr pipeline){
-  PipelineListPtr currPipeline = pipeline;
+void processPipelineList(PipelineListPtr pipelineList){
+  PipelineListPtr currPipeline = pipelineList;
   while(currPipeline){
-    processPipeline(pipeline);
+    processPipeline(currPipeline->headCommand);
     currPipeline=currPipeline->next;
   }
 }
 
 //function used by startProcessing
-void processPipeline(PipelineListPtr pipeline){
-  CommandPtr cmdHeadPtr = pipeline->headCommand;
+void processPipeline(CommandPtr headCommand){
+  CommandPtr cmdHeadPtr = headCommand;
   makePlan1(cmdHeadPtr);  
   RemoteCmdPtr remoteCmdHeadPtr =  makeRemoteCmd(cmdHeadPtr);
   if(DBG_RMTE_CMD_TREE_PRINT)
-    printRemoteCmdTree(remoteCmdHeadPtr);  
-  executePlan(remoteCmdHeadPtr);
+    printRemoteCmdTree(remoteCmdHeadPtr);
+  gIndex=1;
+  makePersistentSSH();
+  makeTempDir();
+  executePlan(remoteCmdHeadPtr);  
 }
 
 //function that frees all the pipelines in this list

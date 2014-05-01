@@ -34,8 +34,8 @@
 //toggle on or off to print hostMap
 #define DBG_HOSTMAP_PRINT 0
 //toggle on or off to display final execution command string
-#define DBG_EXEC 1
-
+#define DBG_EXEC 0
+//toggle on or off the execution
 #define FLG_EXEC_DO 1
 
 #define TEMP_DIR ".slsh/"

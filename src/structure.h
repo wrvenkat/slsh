@@ -70,6 +70,8 @@ typedef struct host_info{
   char* mnt_fsname;
   char* mnt_dir;
   int minId;
+  int active;
+  int madeTempDir;
 }HOSTINFO;
 
 typedef HOSTINFO* HostInfoPtr;
@@ -77,8 +79,14 @@ typedef HOSTINFO* HostInfoPtr;
 //the host's IP address is indexed by their
 //array position
 HostInfoPtr hostMap[MAX_HOST];
+//this array is used to mark what are all the execution costs
+//we use this to set and exit persistent connections
+//and also to make temporary directories
+int hostInvolved[MAX_HOST];
 int maxHost;
 char* currWD;
+StringPtr headPersistPathPtr;
+StringPtr tailPersistPathPtr;
 
 typedef struct cmdstat{
   char* cmdName;
@@ -162,6 +170,6 @@ void processForLoop(ForLoopPtr forLoop);
 void processPipelineList(PipelineListPtr pipeline);
 
 //function used by startProcessing
-void processPipeline(PipelineListPtr pipeline);
+void processPipeline(CommandPtr headCmdPtr);
 
 #endif

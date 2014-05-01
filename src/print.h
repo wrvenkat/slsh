@@ -18,8 +18,8 @@ typedef PIPELINELIST* PipelineListPtr;
 //print the entire prse tree
 void printTree();
 
-//print the stuff of for loop
-void printForLoop(ForLoopPtr currForLoop);
+//print the stuff of for loop for the pipelineSelect, 0 for old, 1 for new
+void printForLoop(ForLoopPtr currForLoop,int pipelineSelect);
 
 //print the pipeline
 void printPipeline(PipelineListPtr pipeline);

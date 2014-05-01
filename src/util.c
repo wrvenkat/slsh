@@ -20,9 +20,11 @@ int initGlobals(){
   sepFlag=0;
   sameFileFlag1=0;
   maxHost=0;
+  headPersistPathPtr=tailPersistPathPtr=0;
   currWD = (char*)malloc(sizeof(char)*MAX_DIR_LENGTH);
   getcwd(currWD,MAX_DIR_LENGTH);
-  createHostMap();  
+  createHostMap();
+  initHostInvolved();
   if(maxHost<=1)
     return -1;
   memset(cmdStats,0,MAX_CMDS);
@@ -158,7 +160,9 @@ void createHostMap(){
 	  memset(hostMap[i],0,sizeof(HOSTINFO));
 	  hostMap[i]->minId=minId;	  
 	  hostMap[i]->mnt_dir=strdup(mntEnt->mnt_dir);
-	  hostMap[i]->mnt_fsname=strdup(mntEnt->mnt_fsname);	  
+	  hostMap[i]->mnt_fsname=strdup(mntEnt->mnt_fsname);
+	  hostMap[i]->active=0;
+	  hostMap[i]->madeTempDir=0;
 	  i++;
 	}	
       }
@@ -345,4 +349,11 @@ void loadCmdStats(char* cmdStatsFileName){
       }
     }
   }
+}
+
+//initializes the host involved array to zero
+void initHostInvolved(){
+  int i=0;
+  while(i<maxHost)
+    hostInvolved[i++] = 0;
 }

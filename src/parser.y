@@ -97,7 +97,7 @@ For_Loop    : TOK_FOR WORD TOK_IN QARG TOK_DO Pipeline_list TOK_DONE{
 		if(DBG_PARSE)
 		  printf("For_Loop 5th: %s %s %s word_list %s Pipeline_list %s\n",$1,$2,$3,$5,$7);
                 ForLoopPtr currForLoop = createForLoop(strdup($2),strdup($4));
-                currForLoop->pipeline = (PipelineListPtr)$6;
+                currForLoop->pipelineList = (PipelineListPtr)$6;
                 currForLoop->next=0;
                 $$=currForLoop;
               }

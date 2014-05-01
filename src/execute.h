@@ -36,6 +36,11 @@ void makeTempDir();
 
 //this function makes the persistent SSH connections and also exits them once
 //all the commands are executed
-int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr);
+int makePersistentSSH();
+
+//exit the persistenconnection mode
+//this function makes the persistent SSH connections and also exits them once
+//all the commands are executed
+int exitPersistentSSH();
 
 #endif

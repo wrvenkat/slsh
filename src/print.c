@@ -6,7 +6,7 @@
 void printTree(){
   printf("-----------Begin printTree----------------------------------\n");
   if(headPtr->type==FORLOOPT)
-    printForLoop((ForLoopPtr)(headPtr->inputUnit));
+    printForLoop((ForLoopPtr)(headPtr->inputUnit),0);
   else if(headPtr->type==PIPELINELST)
     printPipeline((PipelineListPtr)(headPtr->inputUnit));
   printf("\n");
@@ -14,10 +14,14 @@ void printTree(){
 }
 
 //print the stuff of for loop
-void printForLoop(ForLoopPtr currForLoop){
+void printForLoop(ForLoopPtr currForLoop,int pipelineSelect){
   if(!currForLoop)	return;
   printf("for %s in %s do\n",currForLoop->varName,currForLoop->expr);
-  PipelineListPtr currPipelineList = currForLoop->pipeline;
+  PipelineListPtr currPipelineList =0;
+  if(pipelineSelect)
+    currPipelineList = currForLoop->newPipelineList;
+  else
+    currPipelineList = currForLoop->pipelineList;
   //print each of the pipeline list in this for loop
   while(currPipelineList){
     printf("\t");

@@ -20,8 +20,8 @@ extern char* currWD;
 typedef struct for_loop{
   char* varName;
   char* expr;
-  PipelineListPtr pipeline;
-  PipelineListPtr newPipeline;
+  PipelineListPtr pipelineList;
+  PipelineListPtr newPipelineList;
   struct for_loop* next;
 }FORLOOP;
 

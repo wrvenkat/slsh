@@ -7,71 +7,118 @@
 #include "execute.h"
 #include <unistd.h>
 #include "structure.h"
+#include "util.h"
 
-//this function makes the persistent SSH connections and also exits them once
-//all the commands are executed
-int makePersistentSSH(RemoteCmdPtr remoteCmdHeadPtr){
+//this function makes the persistent SSH connections
+//and returns the String linked list which has all the connection
+//string
+int makePersistentSSH(){
   if(DBG_FUNC_ENTRY)
     printf("Inside makePersistentSSH\n");
-  char** persistPath = 0;
-  //allocate size for three char arrays
-  persistPath = malloc(sizeof(char*)*(maxHost+1));
-  //initialize the memory
-  memset(persistPath,0,maxHost+1);
+  char* persistPath = 0;  
   int i=1;
-  int retValue=0;
+  //int retValue=0;
   int length1 = strlen("ssh ")+strlen(PERSIST_SSH)+1+strlen(P_PATH_STR)+10;;
-  for(i=1;i<maxHost;i++){
-    StringPtr sshString = getSSHString(i);
-    length1+=sshString->length;
-    //get the length
-    srand(time(0));    
-    persistPath[i] = malloc(sizeof(char)*(strlen(P_PATH_STR)+10));
-    memset(persistPath[i],0,strlen(P_PATH_STR)+10+1);
-    double f= rand() / (double)RAND_MAX;
-    sprintf(persistPath[i],"%s%f",P_PATH_STR,f);
-    char cmd[length1+1+strlen("'exit'")];
-    sprintf(cmd,"ssh %s %s %s%f 'exit'",sshString->text,PERSIST_SSH,P_PATH_STR,f);
-    if(DBG_GEN)	
-      printf("The ssh persist string is %s\n",cmd);
-    if(FLG_EXEC_DO){
-      pid_t status = system(cmd);
-      retValue = WEXITSTATUS(status);
+  for(i=1;i<maxHost;i++){    
+    if(hostInvolved[i]){
+      //printf("Host Involved value for %d is %d\n",i,hostInvolved[i]);
+      StringPtr sshString = getSSHString(i);
+      length1+=sshString->length;
+      //get the length
+      srand(time(0));    
+      persistPath = malloc(sizeof(char)*(strlen(P_PATH_STR)+10));
+      memset(persistPath,0,strlen(P_PATH_STR)+10+1);
+      double f= rand() / (double)RAND_MAX;
+      sprintf(persistPath,"%s%f",P_PATH_STR,f);
+      //printf("Persist path is %s\n",persistPath);
+      char cmd[length1+1+strlen("'exit'")];
+      sprintf(cmd,"ssh %s %s %s%f 'exit'",sshString->text,PERSIST_SSH,P_PATH_STR,f);
+      if(DBG_GEN)	
+	printf("The ssh persist string for host %d is %s\n",i,cmd);
+      if(FLG_EXEC_DO){
+	/*pid_t status =*/ system(cmd);
+	//retValue = WEXITSTATUS(status);
+      }
+      /*if(retValue>0)*/{
+	hostMap[i]->active=1;
+	StringPtr newPersistPath = createString();
+	char* newStr = malloc(sizeof(char)*(strlen(persistPath)+3));
+	memset(newStr,0,strlen(persistPath)+3);
+	sprintf(newStr,"%d,%s",i,persistPath);
+	newPersistPath->text=newStr;
+	newPersistPath->next=0;
+	//insert this into the global persist path list
+	if(newPersistPath){
+	  if(!headPersistPathPtr)
+	    headPersistPathPtr=tailPersistPathPtr=newPersistPath;
+	  else{
+	    tailPersistPathPtr->next=newPersistPath;
+	    tailPersistPathPtr=newPersistPath;
+	  }
+	}
+      }
     }
   }
-  //here is where we start the execution
-  retValue = executeCommand(remoteCmdHeadPtr,0,-2);
-  //sleep(5);
-  for(i=1;i<maxHost;i++){
-    StringPtr sshString = getSSHString(i);
-    length1 = strlen(PERSIST_EXIT)+1+strlen(persistPath[i])+sshString->length+strlen(REDIR_NULL)+1;
-    char cmd[length1+1];
-    memset(cmd,0,length1+1);
-    sprintf(cmd,"%s %s %s %s",PERSIST_EXIT,persistPath[i],sshString->text,REDIR_NULL);
-    if(DBG_GEN)
-      printf("SSH exit string is %s\n",cmd);
-    if(FLG_EXEC_DO){
-      pid_t status = system(cmd);
-      retValue = WEXITSTATUS(status);
+  return 1;
+}  
+  
+//exits the persistent connection with the persist path in
+//the 2d array persistpath
+int exitPersistentSSH(){
+  if(!headPersistPathPtr)  return 1;
+  if(DBG_FUNC_ENTRY)
+    printf("Inside exitPersistentSSH\n");
+  int i=0;
+  int retValue=0;
+  int length1=0;
+  char* persistPath=0;  
+  //here the condition means that if the host is still involved don't disconnect
+  //the persistent connections
+  for(i=1;i<maxHost && headPersistPathPtr /*&& hostMap[i]->active*/;i++){    
+    if(!hostInvolved[i] && hostMap[i]->active){
+      //printf("Trying to exit the persistent connection for %d\n",i);
+      StringPtr tempStrPtr = headPersistPathPtr;
+      while(tempStrPtr){
+	char host1 = (tempStrPtr->text)[0];
+	//printf("Host here is %c\n",host1);
+	if(atoi(&host1)!=i)
+	  tempStrPtr=tempStrPtr->next;
+	else
+	  break;
+      }
+      if(!tempStrPtr)
+	continue;
+      persistPath = strrchr(tempStrPtr->text,',');
+      if(persistPath)
+	persistPath+=1;
+      StringPtr sshString = getSSHString(i);    
+      length1 = strlen(PERSIST_EXIT)+1+strlen(persistPath)+sshString->length+strlen(REDIR_NULL)+1;
+      char cmd[length1+1];
+      memset(cmd,0,length1+1);
+      sprintf(cmd,"%s %s %s %s",PERSIST_EXIT,persistPath,sshString->text,REDIR_NULL);
+      if(DBG_GEN)
+	printf("SSH exit string is %s\n",cmd);
+      if(FLG_EXEC_DO){
+	pid_t status = system(cmd);
+	retValue = WEXITSTATUS(status);
+	hostMap[i]->active=0;
+      }
     }
-    free(persistPath[i]);
-  }
-  free(persistPath);
+  }  
   return retValue;
 }
 
-//the bootstrap function that travels the
-//RemoteCmd list and executes each command
+//the bootstrap function that starts the execution of the prepared commands
 int executePlan(RemoteCmdPtr remoteCmdHeadPtr){
   if(!remoteCmdHeadPtr)	return 1;
   if(DBG_FUNC_ENTRY)
     printf("Inside executePlan\n");
-  gIndex=1;
-  makeTempDir();
-  return makePersistentSSH(remoteCmdHeadPtr);
+  int retValue = 0;  
+  retValue = executeCommand(remoteCmdHeadPtr,0,-2);  
+  return retValue;
 }
 
-//TODO inout and output redirection is pending
+//the main function which travels the remotCommandTree recursively and executes them
 int executeCommand(RemoteCmdPtr remoteCmdPtr,char* ipFile, int prevExecHost){  
   if(!remoteCmdPtr)	return 0;
   if(DBG_FUNC_ENTRY)
@@ -332,7 +379,7 @@ int transferFile(FilePtr currFile, int execHost){
 //based on the target machine
 StringPtr prepareCommand(RemoteCmdPtr cmd, char* ipFile, char* opFile, int execHost){  
   if(!cmd) return 0;
-  //if(DBG_FUNC_ENTRY)
+  if(DBG_FUNC_ENTRY)
     printf("Inside prepareCommand with execHost %d\n",execHost);
   StringPtr cmdText = cmd->cmdText;
   StringPtr sshString = 0;
@@ -417,13 +464,14 @@ StringPtr prepareCommand(RemoteCmdPtr cmd, char* ipFile, char* opFile, int execH
   return sshString;
 }
 
+//TODO make it use the persistent connections
 //make temporary directories
 void makeTempDir(){
   int length = 0;
   int i=0;
   StringPtr sshString = 0;
-  
-  for(i=0;i<maxHost;i++){
+  //make the temporary directories for the active connections whose temp directories haven't been made yet
+  for(i=0;i<maxHost && hostMap[i]->active && !hostMap[i]->madeTempDir;i++){
     char* homeDir = getHomeDir(hostMap[i]->mnt_fsname);
     if(i==0){
       length = strlen("mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL);
@@ -435,6 +483,7 @@ void makeTempDir(){
       //printf("1 Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
       if(FLG_EXEC_DO)
 	system(mkDirCmd);
+      hostMap[i]->madeTempDir=1;
     }
     else{
       sshString = getSSHString(i);     
@@ -447,6 +496,7 @@ void makeTempDir(){
       //printf("Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
       if(FLG_EXEC_DO)
 	system(mkDirCmd);
+      hostMap[i]->madeTempDir=1;
     }    
     freeString(sshString);
   }  

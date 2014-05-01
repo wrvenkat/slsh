@@ -64,4 +64,7 @@ StringPtr getSSHString(int host);
 //loads the command stats from cmdStatsFileName onto cmdStats array
 void loadCmdStats(char* cmdStatsFileName);
 
+//initializes the host involved array to zero
+void initHostInvolved();
+
 #endif
