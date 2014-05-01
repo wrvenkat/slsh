@@ -163,6 +163,7 @@ void createHostMap(){
 	  hostMap[i]->mnt_fsname=strdup(mntEnt->mnt_fsname);
 	  hostMap[i]->active=0;
 	  hostMap[i]->madeTempDir=0;
+	  hostMap[i]->persistPath=0;
 	  i++;
 	}	
       }

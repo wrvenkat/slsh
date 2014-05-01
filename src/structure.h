@@ -72,6 +72,7 @@ typedef struct host_info{
   int minId;
   int active;
   int madeTempDir;
+  char* persistPath;
 }HOSTINFO;
 
 typedef HOSTINFO* HostInfoPtr;
@@ -85,8 +86,6 @@ HostInfoPtr hostMap[MAX_HOST];
 int hostInvolved[MAX_HOST];
 int maxHost;
 char* currWD;
-StringPtr headPersistPathPtr;
-StringPtr tailPersistPathPtr;
 
 typedef struct cmdstat{
   char* cmdName;
@@ -159,6 +158,9 @@ void freeCmdStats();
 
 //frees the cmdStat
 void freeCmdStat(CmdStatPtr cmdStat);
+
+//frees the hostMap
+void freeHostMap();
 
 //the bootstrap function that starts the processing of the whole parse tree
 void startProcessing();

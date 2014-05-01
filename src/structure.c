@@ -80,6 +80,7 @@ void startProcessing(){
     initHostInvolved();
     exitPersistentSSH();
     freeForLoop(currForLoop);
+    freeHostMap();
   }
   else if(ipUnitPtr->type==PIPELINELST){
     processPipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
@@ -88,6 +89,7 @@ void startProcessing(){
     initHostInvolved();
     exitPersistentSSH();
     freePipelineList((PipelineListPtr)(ipUnitPtr->inputUnit));
+    freeHostMap();
   }
 }
 
@@ -205,4 +207,17 @@ void freeCmdStat(CmdStatPtr cmdStat){
     printf("Inside freeCmdStat\n");
   free(cmdStat->cmdName);
   free(cmdStat);
+}
+
+//frees the hostMap
+void freeHostMap(){
+  int i=0;
+  for(i=0;i<maxHost;i++){
+    if(hostMap[i]){
+      free(hostMap[i]->mnt_dir);
+      free(hostMap[i]->mnt_fsname);
+      free(hostMap[i]->persistPath);
+      free(hostMap[i]);
+    }
+  }
 }

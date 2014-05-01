@@ -15,12 +15,13 @@
 int makePersistentSSH(){
   if(DBG_FUNC_ENTRY)
     printf("Inside makePersistentSSH\n");
-  char* persistPath = 0;  
+  char* persistPath = 0;
   int i=1;
   //int retValue=0;
   int length1 = strlen("ssh ")+strlen(PERSIST_SSH)+1+strlen(P_PATH_STR)+10;;
-  for(i=1;i<maxHost;i++){    
-    if(hostInvolved[i]){
+  for(i=1;i<maxHost;i++){
+    //if the host is involved and there is not active connections
+    if(hostInvolved[i] && !(hostMap[i]->active)){
       //printf("Host Involved value for %d is %d\n",i,hostInvolved[i]);
       StringPtr sshString = getSSHString(i);
       length1+=sshString->length;
@@ -41,21 +42,7 @@ int makePersistentSSH(){
       }
       /*if(retValue>0)*/{
 	hostMap[i]->active=1;
-	StringPtr newPersistPath = createString();
-	char* newStr = malloc(sizeof(char)*(strlen(persistPath)+3));
-	memset(newStr,0,strlen(persistPath)+3);
-	sprintf(newStr,"%d,%s",i,persistPath);
-	newPersistPath->text=newStr;
-	newPersistPath->next=0;
-	//insert this into the global persist path list
-	if(newPersistPath){
-	  if(!headPersistPathPtr)
-	    headPersistPathPtr=tailPersistPathPtr=newPersistPath;
-	  else{
-	    tailPersistPathPtr->next=newPersistPath;
-	    tailPersistPathPtr=newPersistPath;
-	  }
-	}
+	hostMap[i]->persistPath=persistPath;
       }
     }
   }
@@ -64,8 +51,7 @@ int makePersistentSSH(){
   
 //exits the persistent connection with the persist path in
 //the 2d array persistpath
-int exitPersistentSSH(){
-  if(!headPersistPathPtr)  return 1;
+int exitPersistentSSH(){  
   if(DBG_FUNC_ENTRY)
     printf("Inside exitPersistentSSH\n");
   int i=0;
@@ -74,23 +60,10 @@ int exitPersistentSSH(){
   char* persistPath=0;  
   //here the condition means that if the host is still involved don't disconnect
   //the persistent connections
-  for(i=1;i<maxHost && headPersistPathPtr /*&& hostMap[i]->active*/;i++){    
-    if(!hostInvolved[i] && hostMap[i]->active){
-      //printf("Trying to exit the persistent connection for %d\n",i);
-      StringPtr tempStrPtr = headPersistPathPtr;
-      while(tempStrPtr){
-	char host1 = (tempStrPtr->text)[0];
-	//printf("Host here is %c\n",host1);
-	if(atoi(&host1)!=i)
-	  tempStrPtr=tempStrPtr->next;
-	else
-	  break;
-      }
-      if(!tempStrPtr)
-	continue;
-      persistPath = strrchr(tempStrPtr->text,',');
-      if(persistPath)
-	persistPath+=1;
+  for(i=1;i<maxHost /*&& hostMap[i]->active*/;i++){    
+    if(!hostInvolved[i] && hostMap[i]->active){      
+      persistPath=hostMap[i]->persistPath;
+      if(!persistPath)	continue;
       StringPtr sshString = getSSHString(i);    
       length1 = strlen(PERSIST_EXIT)+1+strlen(persistPath)+sshString->length+strlen(REDIR_NULL)+1;
       char cmd[length1+1];
@@ -102,7 +75,7 @@ int exitPersistentSSH(){
 	pid_t status = system(cmd);
 	retValue = WEXITSTATUS(status);
 	hostMap[i]->active=0;
-      }
+      }      
     }
   }  
   return retValue;
@@ -471,33 +444,35 @@ void makeTempDir(){
   int i=0;
   StringPtr sshString = 0;
   //make the temporary directories for the active connections whose temp directories haven't been made yet
-  for(i=0;i<maxHost && hostMap[i]->active && !hostMap[i]->madeTempDir;i++){
-    char* homeDir = getHomeDir(hostMap[i]->mnt_fsname);
-    if(i==0){
-      length = strlen("mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL);
-      char mkDirCmd[length+1];
-      memset(mkDirCmd,0,length+1);
-      sprintf(mkDirCmd,"mkdir \"%s%s\" %s",homeDir,TEMP_DIR,REDIR_NULL);
-      if(DBG_GEN)
-	printf("1 The mkDirCmd is %s\n",mkDirCmd);
-      //printf("1 Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
-      if(FLG_EXEC_DO)
-	system(mkDirCmd);
-      hostMap[i]->madeTempDir=1;
+  for(i=0;i<maxHost;i++){
+    if(hostMap[i]->active && !hostMap[i]->madeTempDir){
+      char* homeDir = getHomeDir(hostMap[i]->mnt_fsname);
+      if(i==0){
+	length = strlen("mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL);
+	char mkDirCmd[length+1];
+	memset(mkDirCmd,0,length+1);
+	sprintf(mkDirCmd,"mkdir \"%s%s\" %s",homeDir,TEMP_DIR,REDIR_NULL);
+	if(DBG_GEN)
+	  printf("1 The mkDirCmd is %s\n",mkDirCmd);
+	//printf("1 Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
+	if(FLG_EXEC_DO)
+	  system(mkDirCmd);
+	hostMap[i]->madeTempDir=1;
+      }
+      else{
+	sshString = getSSHString(i);     
+	length = strlen("ssh ")+sshString->length+strlen(" 'mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL)+1;      
+	char mkDirCmd[length+1];
+	memset(mkDirCmd,0,length+1);
+	sprintf(mkDirCmd,"ssh %s 'mkdir \"%s%s\" %s'",sshString->text,homeDir,TEMP_DIR, REDIR_NULL);
+	if(DBG_GEN)
+	  printf("2 The mkDirCmd is %s\n",mkDirCmd);
+	//printf("Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
+	if(FLG_EXEC_DO)
+	  system(mkDirCmd);
+	hostMap[i]->madeTempDir=1;
+      }    
+      freeString(sshString);
     }
-    else{
-      sshString = getSSHString(i);     
-      length = strlen("ssh ")+sshString->length+strlen(" 'mkdir ")+1+strlen(homeDir)+strlen(TEMP_DIR)+1+1+strlen(REDIR_NULL)+1;      
-      char mkDirCmd[length+1];
-      memset(mkDirCmd,0,length+1);
-      sprintf(mkDirCmd,"ssh %s 'mkdir \"%s%s\" %s'",sshString->text,homeDir,TEMP_DIR, REDIR_NULL);
-      if(DBG_GEN)
-	printf("2 The mkDirCmd is %s\n",mkDirCmd);
-      //printf("Length of mkDirCmd is %d and %d\n",length,(int)strlen(mkDirCmd));
-      if(FLG_EXEC_DO)
-	system(mkDirCmd);
-      hostMap[i]->madeTempDir=1;
-    }    
-    freeString(sshString);
   }  
 }
