@@ -19,8 +19,7 @@ int initGlobals(){
   aggFlag=0;
   sepFlag=0;
   sameFileFlag1=0;
-  maxHost=0;
-  headPersistPathPtr=tailPersistPathPtr=0;
+  maxHost=0;  
   currWD = (char*)malloc(sizeof(char)*MAX_DIR_LENGTH);
   getcwd(currWD,MAX_DIR_LENGTH);
   createHostMap();
