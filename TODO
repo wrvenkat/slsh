@@ -3,7 +3,7 @@ TODO - a todo listing all the changes to be implemented
 
 Major
 -----
-1. Support for sshing into only those hosts that are in the pipeline.
+1. Support for sshing into only those hosts that are in the pipeline. DONE
 2. Support for pipes, using fork() and execve() instead of system()
 3. See if doing 2. causes bytes to be transferred via the local host. If so, see if it can done
 in a way without using temporary files - this is assuming that all the hosts have authorization to each other.
@@ -12,9 +12,9 @@ in a way without using temporary files - this is assuming that all the hosts hav
 Minor
 -----
 1. Move the SSH persist-exit to a newer function so that execCommand can be called from outside
-makePersistentSSH() function.
+makePersistentSSH() function. DONE
 2. Also, as an implication of doing above, move the makePersistenSSH() for the whole for loop structure instead of
-for each pipeline.
+for each pipeline. DONE
 
 Test
 ----
