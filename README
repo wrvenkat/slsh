@@ -1,7 +1,7 @@
 Seamless Shell - SLSH - /SLUSH/
 --------------
 
-Seamless Shell, known as slsh is a simple, lightweight command-line tool designed to optimize the execution of [pipelines] (http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) across different remote machines from which files are used in the pipeline.
+Seamless Shell, known as slsh is a simple, lightweight command-line tool designed to optimize the execution of [pipelines](http://en.wikipedia.org/wiki/Pipeline_%28Unix%29) across different remote machines from which files are used in the pipeline.
 
 When executed normally, the files required for a pipeline when on remote machines are downloaded locally for execution. So, it is easy to imagine that when large files are involved, the time taken to completely execute the pipeline can be significant. Seamless Shell, aims to minimize this execution by organizing the execution of the individual commands so that, there is the least amount of transferred bytes thereby reducing the execution times.
 
@@ -20,7 +20,7 @@ Compile
 ----------
 
 a. Dependencies
-	-	You will need to install [Flex] (http://flex.sourceforge.net/) and [Bison] (http://www.gnu.org/software/bison/) to compile.
+	-	You will need to install [Flex](http://flex.sourceforge.net/) and [Bison](http://www.gnu.org/software/bison/) to compile.
 
 b. Compilation
 	-	running make insside the src directory will get you the executeable for slsh.
