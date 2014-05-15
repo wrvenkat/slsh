@@ -20,7 +20,7 @@ Compile
 ----------
 
 a. Dependencies
-	-	You will need to install [Flex](http://flex.sourceforge.net/) and [Bison](http://www.gnu.org/software/bison/) to compile.
+	You will need to install [Flex](http://flex.sourceforge.net/) and [Bison](http://www.gnu.org/software/bison/) to compile.
 
 b. Compilation
-	-	running make insside the src directory will get you the executeable for slsh.
+	Running make inside the src directory will get you the executeable for slsh.
